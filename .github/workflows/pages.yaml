@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 21.x
       - name: Install NPM Dependencies
-        run: npm ci
+        run: npm i
       - name: Build
         run: npm run build
       - name: Upload artifact in order to deploy
