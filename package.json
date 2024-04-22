@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "client": "yarn --cwd client start",
+    "server": "yarn --cwd server start",
+    "build": "yarn --cwd client build",
+    "start": "concurrently --kill-others-on-fail \"yarn --cwd server start\" \"yarn --cwd client start\""
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
