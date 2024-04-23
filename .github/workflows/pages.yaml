@@ -18,10 +18,10 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-      - name: Install node 21
+      - name: Install node 20
         uses: actions/setup-node@v2
         with:
-          node-version: 21.x
+          node-version: 20.x
       - name: Install NPM Dependencies
         run: npm install --prefix ./client
       - name: Build
