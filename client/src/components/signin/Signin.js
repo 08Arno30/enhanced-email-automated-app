@@ -1,4 +1,5 @@
 import React from "react";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 
@@ -18,6 +19,9 @@ const Signin = ({ onSuccessfulLogin } ) => {
             <h2 className="text-2xl font-bold mt-10">Sign in</h2>
             <h3 className="text-lg  mt-10">Continue with Google</h3>
             <div id="signInButton" className="py-2 px-4 rounded-full mt-2">
+              <GoogleOAuthProvider
+                clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
+              >
               <GoogleLogin
                 clientId={clientId}
                 onSuccess={(credentialResponse) => {
@@ -28,7 +32,8 @@ const Signin = ({ onSuccessfulLogin } ) => {
                 onError={() => {
                   console.log("Login Failed");
                 }}
-              />
+                />
+              </GoogleOAuthProvider>
             </div>
           </div>
         </div>
