@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/enhanced-email-automated-app/static/css/main.e6e7fbfa.css",
-    "main.js": "/enhanced-email-automated-app/static/js/main.dd529b2a.js",
+    "main.js": "/enhanced-email-automated-app/static/js/main.977895e1.js",
     "static/js/453.419a5d54.chunk.js": "/enhanced-email-automated-app/static/js/453.419a5d54.chunk.js",
     "index.html": "/enhanced-email-automated-app/index.html",
     "main.e6e7fbfa.css.map": "/enhanced-email-automated-app/static/css/main.e6e7fbfa.css.map",
-    "main.dd529b2a.js.map": "/enhanced-email-automated-app/static/js/main.dd529b2a.js.map",
+    "main.977895e1.js.map": "/enhanced-email-automated-app/static/js/main.977895e1.js.map",
     "453.419a5d54.chunk.js.map": "/enhanced-email-automated-app/static/js/453.419a5d54.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6e7fbfa.css",
-    "static/js/main.dd529b2a.js"
+    "static/js/main.977895e1.js"
   ]
 }
