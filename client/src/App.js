@@ -3,7 +3,7 @@ import './App.css';
 
 // components
 import Signin from './components/signin/Signin';
-import Signout from './components/signout/Signout';
+import Inbox from './components/inbox/Inbox';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -19,7 +19,7 @@ function App() {
   return (
     <Fragment>
       {!isLoggedIn && <Signin onSuccessfulLogin={handleSuccessfulLogin} />}
-      {isLoggedIn && <Signout onSuccessfulLogout={handleSuccessfulLogout} />}
+      {isLoggedIn && <Inbox onSuccessfulLogout={handleSuccessfulLogout} />}
     </Fragment>
   );
 }
