@@ -22,6 +22,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Add env file
+        run: echo "${{ secrets.DOTENV }}" > .env
       - name: Install NPM Dependencies
         run: npm install --prefix ./client
       - name: Build

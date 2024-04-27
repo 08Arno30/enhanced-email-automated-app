@@ -6,6 +6,7 @@
     "start": "concurrently --kill-others-on-fail \"yarn --cwd server start\" \"yarn --cwd client start\""
   },
   "dependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "react-icons": "^5.1.0"
   }
 }
