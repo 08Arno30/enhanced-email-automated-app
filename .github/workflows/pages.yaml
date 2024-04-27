@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 20
       - name: Install NPM Dependencies
-        run: npm install react-fade-in@latest react-reveal@latest --save-dev --prefix ./client
+        run: npm install --prefix ./client
       - name: Build
         run: npm run build --prefix ./client
       - name: Upload artifact in order to deploy

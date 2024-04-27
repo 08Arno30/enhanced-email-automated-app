@@ -2,8 +2,7 @@ import { React, useState, useEffect } from "react";
 import * as API from "../../api/index";
 import { useGoogleLogin } from "@react-oauth/google";
 import googleIcon from "../../assets/google-icon-logo-svgrepo-com.svg";
-import FadeIn from "react-fade-in";
-
+import './LandingPage.css';
 import Loader from "../loader/Loader";
 const LandingPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -80,8 +79,7 @@ const LandingPage = () => {
       ) : (
         <div className="bg-gradient-to-b from-yahoo-purple to-white h-screen w-full">
           <div className="flex justify-center items-center h-full">
-            <FadeIn>
-              <div className="bg-white rounded-2xl shadow-2xl p-5 w-full">
+              <div className="bg-white rounded-2xl shadow-2xl p-5 w-1/3 signin-card">
                 <div className="flex flex-col items-center">
                   <h1>
                     <span className="text-4xl font-bold text-yahoo-purple">
@@ -110,7 +108,6 @@ const LandingPage = () => {
                   </div>
                 </div>
               </div>
-            </FadeIn>
           </div>
         </div>
       )}
