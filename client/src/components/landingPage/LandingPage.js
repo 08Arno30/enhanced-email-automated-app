@@ -5,6 +5,7 @@ import googleIcon from "../../assets/google-icon-logo-svgrepo-com.svg";
 import './LandingPage.css';
 import Loader from "../loader/Loader";
 const LandingPage = () => {
+  // eslint-disable-next-line no-unused-vars
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
