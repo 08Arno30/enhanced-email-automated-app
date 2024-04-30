@@ -11,13 +11,13 @@ const AppRoutes = () => {
     <Router>
       <Routes>
         <Route
-          path="/enhanced-email-automated-app/landing-page"
+          path="/landing-page"
           element={<LandingPage />}
         />
-        <Route path="/enhanced-email-automated-app/inbox" element={<Inbox />} />
+        <Route path="/inbox" element={<Inbox />} />
         <Route
           path="*"
-          element={<Navigate to="/enhanced-email-automated-app/landing-page" />}
+          element={<Navigate to="/landing-page" />}
         />
       </Routes>
     </Router>
