@@ -54,9 +54,13 @@ const LandingPage = () => {
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
       const request = async () => {
-        const response = await API.signInGoogle(tokenResponse.access_token);
-        if (response) {
-          handleSuccessfulLogin(tokenResponse);
+        try {
+          const response = await API.signInGoogle(tokenResponse.access_token);
+          if (response) {
+            handleSuccessfulLogin(tokenResponse);
+          }
+        } catch (error) {
+          console.log(error);
         }
       };
 
