@@ -47,8 +47,8 @@ const LandingPage = () => {
     const expirationDate = new Date().getTime() + oneDay;
     localStorage.setItem("expirationDate", expirationDate);
 
-    // redirect to inbox
-    window.location = "/inbox";
+    // redirect to inbox with hashrouter
+    window.location.href = "#/inbox";
   };
 
   const login = useGoogleLogin({
