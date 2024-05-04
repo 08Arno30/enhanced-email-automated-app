@@ -16,7 +16,7 @@ const LandingPage = () => {
 
     if (redirect) {
       setTimeout(() => {
-        window.location = "/inbox";
+        window.location = "#/inbox";
       }, 950);
     }
   };
