@@ -33,21 +33,4 @@ jobs:
         with:
           name: production-files
           path: client/build
-
-  # Deploy job
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: production-files
-          path: client/build
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GH_ACCESS_TOKEN }}
-          publish_dir: client/build
   
