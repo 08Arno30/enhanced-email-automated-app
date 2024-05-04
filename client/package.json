@@ -26,7 +26,7 @@
     "start": "set PORT=3000 && react-scripts start",
     "build": "yarn install && react-scripts build",
     "test": "yarn install && react-scripts test",
-    "eject": "yarn install &&react-scripts eject",
+    "eject": "yarn install && react-scripts eject",
     "server": "nodemon -r dotenv/config ../server/server.js",
     "dev": "concurrently \"yarn run server \" \"yarn start\""
   },
