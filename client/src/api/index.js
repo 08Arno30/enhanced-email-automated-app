@@ -5,7 +5,7 @@ import axios from "axios";
 
 // For production
 const API = axios.create({
-  baseURL: "https://enhanced-email-automated-app.onrender.com",
+  baseURL: "/",
 });
 
 API.interceptors.request.use((req) => {
