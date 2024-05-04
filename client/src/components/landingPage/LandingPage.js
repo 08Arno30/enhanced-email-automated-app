@@ -4,6 +4,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import googleIcon from "../../assets/google-icon-logo-svgrepo-com.svg";
 import './LandingPage.css';
 import Loader from "../loader/Loader";
+import Cookies from "js-cookie";
 const LandingPage = () => {
   // eslint-disable-next-line no-unused-vars
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -23,15 +24,20 @@ const LandingPage = () => {
 
   // test if user is already logged in
   useEffect(() => {
-    if (localStorage.getItem("user")) {
+    if (Cookies.get("jwt")) {
       // check if token is still valid
-      const expirationDate = localStorage.getItem("expirationDate");
-      if (new Date().getTime() < expirationDate) {
-        setIsLoggedIn(true);
-        showLoader(2000, true);
-      } else {
-        setIsLoggedIn(false);
-      }
+      const checkToken = async () => {
+        const response = await API.checkToken(Cookies.get("jwt"));
+        console.log(response.valid);
+        if (response.valid) {
+          setIsLoggedIn(true);
+          showLoader(2000, true);
+        } else {
+          setIsLoggedIn(false);
+        }
+      };
+
+      checkToken();
     }
 
     showLoader(1000);
@@ -58,6 +64,13 @@ const LandingPage = () => {
           const response = await API.signInGoogle(tokenResponse.access_token);
           if (response) {
             handleSuccessfulLogin(tokenResponse);
+
+            const now = new Date();
+
+            // Save token as cookie
+            Cookies.set("jwt", response['token'], {
+              expires: now.setDate(now.getDate() + 1),
+            });
           }
         } catch (error) {
           console.log(error);

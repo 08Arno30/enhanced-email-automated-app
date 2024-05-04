@@ -24,3 +24,10 @@ export const signInGoogle = async (accessToken) => {
   });
     return response.data;
 };
+
+export const checkToken = async (token) => {
+  const response = await API.post("/users/checkToken", {
+    token
+  });
+  return response.data;
+};
