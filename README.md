@@ -1,4 +1,7 @@
 # COS730 Software Engineering Assignment: Enhanced Email System with Automation
+![deploy](https://github.com/08Arno30/automated-app/actions/workflows/pages.yaml/badge.svg)
+![build](https://github.com/08Arno30/automated-app/actions/workflows/build.yaml/badge.svg)
+[![codecov](https://codecov.io/gh/08Arno30/automated-app/graph/badge.svg?token=NW9F8JWX6C)](https://codecov.io/gh/08Arno30/automated-app)
 
 This assignment involved enhancing a legacy system by adding automated functionalities. The chosen system was Yahoo Mail. However, due to the lack of open-source code, a basic clone of Yahoo Mail was implemented, replicating core functionalities to serve as a foundation for the automated components.
 

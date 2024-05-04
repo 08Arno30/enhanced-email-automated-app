@@ -67,6 +67,28 @@ const signinController = async (req, res) => {
   }
 };
 
+const checkToken = async (req, res) => {
+  const token = req.body.token;
+
+  if (!token) {
+    return res.json({ valid: false });
+  }
+  else {
+    jwt.verify(token, process.env.REACT_APP_JWT_SECRET, (err, decoded) => {
+      if (err && err.name === "TokenExpiredError") {
+        return res.json({ valid: false, message: "Token expired" });
+      }
+
+      if (err) {
+        return res.json({ valid: false, message: "Invalid token" });
+      }
+
+      return res.json({ valid: true });
+    });
+  }
+};
+
 module.exports = {
   signinController,
+  checkToken
 };
