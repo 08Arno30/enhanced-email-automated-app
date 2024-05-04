@@ -4,7 +4,9 @@ import axios from "axios";
 // const API = axios.create({ baseURL: "http://localhost:5000" });
 
 // For production
-const API = axios.create({ baseURL: process.env.REACT_APP_MONGO_DB_URL });
+const API = axios.create({
+  baseURL: "https://enhanced-email-automated-app.onrender.com",
+});
 
 API.interceptors.request.use((req) => {
   if (localStorage.getItem("user_info")) {
