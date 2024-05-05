@@ -34,10 +34,33 @@ jobs:
           name: production-files
           path: client/build
 
+  # Test job
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Add env file
+        run: echo "${{ secrets.DOTENV }}" > .env
+      - name: Install NPM Dependencies
+        run: npm install --prefix ./client
+      - name: Test
+        run: npm run test --prefix ./client
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: 08Arno30/enhanced-email-automated-app
+
   # Deploy job
   deploy:
     name: Deploy
-    needs: build
+    needs: [build, test]
     runs-on: ubuntu-latest
     permissions:
       deployments: write
@@ -47,14 +70,10 @@ jobs:
         with:
           name: production-files
           path: client/build
-      - uses: actions/checkout@v3
-      - uses: JorgeLNJunior/render-deploy@v1.4.4
+      - name: Deploy to production
+        uses: johnbeynon/render-deploy-action@v0.0.8
         with:
-          service_id: ${{ secrets.RENDER_FE_SERVICE_ID }}
-          api_key: ${{ secrets.RENDER_API_KEY }}
-          clear_cache: true
-          wait_deploy: true
-          github_deployment: true
-          deployment_environment: 'production'
-          github_token: ${{ secrets.GH_ACCESS_TOKEN }}
+          service-id: ${{ secrets.RENDER_FE_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+          wait-for-success: true
   
