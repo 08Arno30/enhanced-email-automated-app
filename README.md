@@ -1,7 +1,12 @@
+<div align="center">
+<img width="400px" src="https://github.com/08Arno30/enhanced-email-automated-app/blob/main/client/public/logo.png" />
+ 
 # COS730 Software Engineering Assignment: Enhanced Email System with Automation
-![deploy](https://github.com/08Arno30/automated-app/actions/workflows/pages.yaml/badge.svg)
-![build](https://github.com/08Arno30/automated-app/actions/workflows/build.yaml/badge.svg)
-[![codecov](https://codecov.io/gh/08Arno30/automated-app/graph/badge.svg?token=NW9F8JWX6C)](https://codecov.io/gh/08Arno30/automated-app)
+![deploy](https://github.com/08Arno30/automated-app/actions/workflows/pages.yaml/badge.svg) 
+![build](https://github.com/08Arno30/automated-app/actions/workflows/build.yaml/badge.svg) 
+[![codecov](https://codecov.io/gh/08Arno30/automated-app/graph/badge.svg?token=NW9F8JWX6C)](https://codecov.io/gh/08Arno30/automated-app) 
+<a href="https://enhanced-email-automated-app-frontend.onrender.com" target="_blank" style="text-decoration:none">  <img src="https://custom-icon-badges.demolab.com/badge/Visit%20Live%20Site-410093?logo=mail&logoColor=white" /></a>
+</div>
 
 This assignment involved enhancing a legacy system by adding automated functionalities. The chosen system was Yahoo Mail. However, due to the lack of open-source code, a basic clone of Yahoo Mail was implemented, replicating core functionalities to serve as a foundation for the automated components.
 
@@ -12,3 +17,4 @@ The implemented functionalities are:
 
 By incorporating these automated features, this enhanced email system offers improved user experience and potentially serves as a valuable reference for implementing similar functionalities in modern email systems.
 
+[GitHub Wiki](https://github.com/08Arno30/enhanced-email-automated-app/wiki)
