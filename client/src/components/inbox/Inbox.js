@@ -34,7 +34,7 @@ const Inbox = () => {
       <Navbar showProfileModal={handleOpenModal} userProfile={userProfile} />
       {showProfileModal && (
         <div className="profile-modal-overlay">
-          <Profile userProfile={userProfile} closeProfileModal={handleOpenModal}/>
+          <Profile userProfile={userProfile} setShowProfileModal={setShowProfileModal}/>
         </div>
       )}
     </div>
