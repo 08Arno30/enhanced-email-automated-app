@@ -18,3 +18,5 @@ The implemented functionalities are:
 By incorporating these automated features, this enhanced email system offers improved user experience and potentially serves as a valuable reference for implementing similar functionalities in modern email systems.
 
 [GitHub Wiki](https://github.com/08Arno30/enhanced-email-automated-app/wiki)
+
+[View Project Management Board](https://petalite-cress-3d0.notion.site/COS730-Assignment-2-bf827da4dfc3491788a7ca1ab811c256?pvs=4)
