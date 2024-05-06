@@ -1,8 +1,9 @@
 import React from "react";
 import { FaSearch } from "react-icons/fa";
-import { CgProfile } from "react-icons/cg";
+const Navbar = ({ showProfileModal, userProfile }) => {
+  
 
-const Navbar = () => {
+
   return (
     <div className="navbar p-5 pt-8 flex justify-between">
       <div className="left-container flex items-center w-2/3">
@@ -25,7 +26,13 @@ const Navbar = () => {
         </div>
       </div>
       <div className="profile-icon w-1/3 flex justify-end mr-5">
-        <CgProfile size={45} className="hover:cursor-pointer" />
+        <img
+          src={userProfile?.user_picture}
+          className="rounded-full w-14 cursor-pointer"
+          alt="profile"
+          onClick={showProfileModal}
+          title="Profile"
+        />
       </div>
     </div>
   );

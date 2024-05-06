@@ -103,6 +103,7 @@ const LandingPage = () => {
                     <span className="text-4xl font-bold text-yahoo-purple">
                       yahoo
                       <span className="text-yahoo-purple italic">!</span>
+                      <span className="text-yahoo-grey"> mail</span>
                     </span>
                   </h1>
                   <h2 className="text-2xl font-bold mt-10">Sign in</h2>
