@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Cookies from "js-cookie";
 import closeIcon from "../../assets/close-square-svgrepo-com.svg";
-import editIcon from "../../assets/edit-svgrepo-com (1).svg";
+import editIcon from "../../assets/edit-svgrepo-com.svg";
 
 const Profile = ({ userProfile, setShowProfileModal }) => {
   const [isEditingLanguage, setIsEditingLanguage] = useState(false);
@@ -27,9 +27,8 @@ const Profile = ({ userProfile, setShowProfileModal }) => {
       inputRef.current.focus();
     }
   }, [isEditingLanguage]);
-    
 
-  const handleUserLanguage = () => {};
+  //   const handleUserLanguage = () => {};
 
   return (
     <div
@@ -39,7 +38,7 @@ const Profile = ({ userProfile, setShowProfileModal }) => {
     >
       <div
         id="profile-modal"
-        className="profile-modal bg-white rounded-2xl shadow-2xl p-5 w-1/2 h-1/2 flex flex-col justify-between"
+        className="profile-modal bg-yahoo-white rounded-2xl shadow-2xl p-5 w-1/2 h-1/2 flex flex-col justify-between"
         onClick={(e) => e.stopPropagation()}
       >
         <div>
