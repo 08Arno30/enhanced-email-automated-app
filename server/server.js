@@ -29,7 +29,7 @@ app.use(express.urlencoded({ extended: false }));
 app.get("/", (req, res) => {
     res.send("Server running");
 })
-app.use("/users", userRoutes);
+app.use("/api/users", userRoutes);
 
 const PORT = process.env.REACT_APP_PORT || 5000;
 
