@@ -1,5 +1,5 @@
 import React from "react";
-import { FaSearch } from "react-icons/fa";
+// import { FaSearch } from "react-icons/fa";
 const Navbar = ({ showProfileModal, userProfile }) => {
   return (
     <div className="navbar pl-5 pt-3 pb-3 flex justify-between">
