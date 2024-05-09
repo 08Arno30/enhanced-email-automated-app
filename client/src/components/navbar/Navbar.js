@@ -11,7 +11,7 @@ const Navbar = ({ showProfileModal, userProfile }) => {
           </span>
         </div>
         {/* Add a search bar where you can search for emails with a button having a search icon */}
-        <div className="search bg-yahoo-white rounded-md flex items-center h-10 w-full">
+        {/* <div className="search bg-yahoo-white rounded-md flex items-center h-10 w-full">
           <input
             type="text"
             className="search__input bg-yahoo-white m-1 ml-2 focus:outline-none w-full"
@@ -20,7 +20,7 @@ const Navbar = ({ showProfileModal, userProfile }) => {
           <button className="search__button bg-yahoo-light-purple p-1 rounded-tr-md rounded-br-md h-full">
             <FaSearch fill="white" />
           </button>
-        </div>
+        </div> */}
       </div>
       <div className="profile-icon w-1/3 flex justify-end mr-5">
         <img

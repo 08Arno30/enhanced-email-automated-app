@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import * as API from "../../api/index";
@@ -6,10 +7,12 @@ import folderClose from "../../assets/folder-close-svgrepo-com.svg";
 import folderOpen from "../../assets/folder-open-svgrepo-com.svg";
 import folderPlus from "../../assets/folder-plus-svgrepo-com.svg";
 import folderOptions from "../../assets/options-svgrepo-com.svg";
-import folderMove from "../../assets/upload-folder-svgrepo-com.svg";
-import folderTrash from "../../assets/trash-svgrepo-com.svg";
-import checkboxUnchecked from "../../assets/checkbox-unchecked-svgrepo-com.svg";
-import checkboxChecked from "../../assets/checkbox-checked-svgrepo-com.svg";
+// import folderMove from "../../assets/upload-folder-svgrepo-com.svg";
+// import folderTrash from "../../assets/trash-svgrepo-com.svg";
+// import checkboxUnchecked from "../../assets/checkbox-unchecked-svgrepo-com.svg";
+// import checkboxChecked from "../../assets/checkbox-checked-svgrepo-com.svg";
+// import someCheckboxChecked from "../../assets/add-minus-square-svgrepo-com.svg";
+import goBack from "../../assets/arrow-back-basic-svgrepo-com.svg";
 
 //components
 import Navbar from "../navbar/Navbar";
@@ -27,9 +30,12 @@ const Inbox = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
-  const [selectAllEmailsOnPage, setSelectAllEmailsOnPage] = useState(false);
+  // const [mainSelectorBox, setMainSelectorBox] = useState(checkboxUnchecked);
   const [listOfEmails, setListOfEmails] = useState([]);
   const [selectedEmails, setSelectedEmails] = useState([]);
+  const [emailOpened, setEmailOpened] = useState(null);
+  const [activeEmail, setActiveEmail] = useState(null);
+  const [showEmailComposeModal, setShowEmailComposeModal] = useState(false);
 
   const handleToggleFolderOptions = (folderIndex) => {
     setShowOptions((prevOptions) => {
@@ -201,6 +207,85 @@ const Inbox = () => {
     );
   });
 
+  const handleOpenEmail = (email) => {
+    setEmailOpened(true);
+    setActiveEmail(email);
+  };
+
+  const EmailListContainer = React.memo(({ selectedEmails, listOfEmails }) => {
+    return (
+      <>
+        {listOfEmails.length > 0 &&
+          listOfEmails.map((email, index) => (
+            <div
+              key={index} // Important for performance optimization
+              className="email-container cursor-pointer grid grid-cols-12 grid-rows-1 items-center w-full bg-yahoo-light-purple bg-opacity-25 p-2 rounded-md mb-2"
+              onClick={() => handleOpenEmail(email)}
+            >
+              <span className="col-start-1 col-span-1 flex items-center">
+                {/* <img
+                  className="checkbox w-6 h-6 col-span-1 cursor-default"
+                  src={`${
+                    selectedEmails.includes(email)
+                      ? checkboxChecked
+                      : checkboxUnchecked
+                  }`}
+                  alt="checkbox"
+                  onClick={() => handleSelectEmail(email)}
+                /> */}
+                <p className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3">
+                  {email.sender_id}
+                </p>
+              </span>
+              <span className="flex items-center w-full col-start-2 col-span-9 ml-8">
+                <p className="subject text-yahoo-grey whitespace-nowrap w-full text-ellipsis overflow-hidden">
+                  {email.subject} - {email.body}
+                </p>
+                <p className="body text-yahoo-grey "></p>
+              </span>
+
+              <p className="date col-start-12 col-span-1 text-sm text-yahoo-grey">
+                {email.sent_at}
+              </p>
+            </div>
+          ))}
+      </>
+    );
+  });
+
+  const handleClosedEmail = () => {
+    setEmailOpened(false);
+    setActiveEmail(null);
+  };
+
+  const EmailView = React.memo(({ email }) => {
+    return (
+      <div className="email-content-container bg-yahoo-white p-5 rounded-md">
+        <div className="header flex items-center justify-between w-full">
+          <img
+            src={goBack}
+            className="w-6 h-6 cursor-pointer"
+            alt="go back"
+            onClick={() => handleClosedEmail()}
+          />
+        </div>
+        <p className="subject flex items-center justify-center text-xl font-bold">
+          {email.subject}
+        </p>
+        <div className="email-content mt-10 ml-10">
+          <div className="email-content-header flex items-center justify-between w-full">
+            <span className="sender flex items-center">
+              <p className="sender text-yahoo-grey">From: </p>
+              <p className="sender ml-5">{email.sender_id}</p>
+            </span>
+            <span className="date text-yahoo-grey">{email.sent_at}</span>
+          </div>
+          <p className="body mt-16 ml-20 pr-24">{email.body}</p>
+        </div>
+      </div>
+    );
+  });
+
   function expandFolderOptions(activeFolder) {
     return (
       folderList.find((folder) => folder === activeFolder) && ( // Use find instead of map
@@ -263,7 +348,7 @@ const Inbox = () => {
         sender_id: 3,
         recipient_id: 1,
         subject: "Test email",
-        body: "This is a test email cdfcccc cccccc cccccc cccccccc cc cccc cccc ccccc cccc ccc cccc ccc.",
+        body: "Please find attached a copy of your payment notification. How to open your payment notification? In order to open your payment notification you will need Adobe Reader installed on your computer. If you don't have Adobe Reader installed on your computer, please refer to the Adobe Website to download. Please do not reply as this was sent from an unattended mailbox. Kind Regards, Payment Notifications",
         original_language: "en",
         translated_body: "Esto es un correo de prueba.",
         sent_at: "random date",
@@ -286,14 +371,109 @@ const Inbox = () => {
     }
   }, []);
 
-  const handleSelectAllEmailsOnPage = () => { };
-  
-  const truncateBody = (body) => {
-    if (body.length > 22) {
-      return body.substring(0, 22) + "...";
-    }
-    return body;
+  // const handleSelectAllEmailsOnPage = () => {
+  //   if (selectedEmails.length === listOfEmails.length) {
+  //     setSelectedEmails(() => []);
+  //     setMainSelectorBox(checkboxUnchecked);
+  //   } else if (selectedEmails.length > 0) {
+  //     if (mainSelectorBox !== someCheckboxChecked) {
+  //       setMainSelectorBox(() => someCheckboxChecked);
+  //     } else {
+  //       setMainSelectorBox(checkboxUnchecked);
+  //       setSelectedEmails(() => []);
+  //     }
+  //   } else {
+  //     setSelectedEmails(listOfEmails.map((email) => email));
+  //     setMainSelectorBox(() => checkboxChecked);
+  //   }
+  // };
+
+  // const handleSelectEmail = (email) => {
+  //   // only select the email that was clicked
+  //   if (selectedEmails.includes(email)) {
+  //     setSelectedEmails((prevList) =>
+  //       prevList.filter((prevEmail) => prevEmail !== email)
+  //     );
+  //   } else {
+  //     setSelectedEmails((prevList) => [...prevList, email]);
+  //   }
+
+  //   if (selectedEmails.length === 0) {
+  //     setMainSelectorBox(() => checkboxUnchecked);
+  //   } else if (selectedEmails.length === listOfEmails.length) {
+  //     setMainSelectorBox(() => checkboxChecked);
+  //   } else {
+  //     setMainSelectorBox(() => someCheckboxChecked);
+  //   }
+  // };
+
+  const handleComposeEmailCancel = () => {
+    setShowEmailComposeModal(false);
   };
+
+  const handleComposeEmailSend = () => {
+    setShowEmailComposeModal(false);
+  };
+
+  const handleComposeEmail = () => {
+    setShowEmailComposeModal(true);
+  };
+
+  const EmailComposeModal = React.memo(() => {
+    return (
+      <div
+        id="compose-view"
+        className="compose-view z-40 bg-black bg-opacity-50 fixed top-0 left-0 w-full h-screen overflow-auto flex items-center justify-center transition-all duration-300 ease-in-out"
+      >
+        <div className="compose-email-container z-50 bg-yahoo-white rounded-2xl shadow-2xl p-5 w-1/2 h-1/2 flex flex-col justify-between">
+          <div className="main-content">
+            <div className="compose-email-header flex justify-between">
+              <h1 className="text-4xl font-bold text-yahoo-purple">
+                Compose Email
+              </h1>
+            </div>
+            <div className="compose-email-body mt-10">
+              <div className="input-to-container flex mb-2">
+                <input
+                  type="text"
+                  placeholder="To"
+                  className="border-b-2 border-yahoo-purple w-full bg-yahoo-white focus:outline-none p-2 pl-0"
+                />
+              </div>
+              <div className="input-subject-container mb-5 bg-yahoo-white">
+                <input
+                  type="text"
+                  placeholder="Subject"
+                  className="border-b-2 border-yahoo-purple w-full bg-yahoo-white focus:outline-none p-2 pl-0"
+                />
+              </div>
+              <div className="input-body-container flex flex-col bg-yahoo-white">
+                <textarea
+                  type="text"
+                  placeholder="Body"
+                  className=" w-full bg-yahoo-white resize-none h-48 focus:outline-none p-2 pl-0"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="compose-email-footer flex justify-between">
+            <button
+              className="text-2xl font-bold text-yahoo-purple cursor-pointer z-50"
+              onClick={() => handleComposeEmailCancel()}
+            >
+              Cancel
+            </button>
+            <button
+              className="text-2xl font-bold text-yahoo-purple"
+              onClick={() => handleComposeEmailSend()}
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  });
 
   return (
     <div className="inbox-view h-screen w-full overflow-y-hidden font-poppins">
@@ -308,7 +488,12 @@ const Inbox = () => {
       )}
       <div className="body-content h-full grid grid-cols-6 lg:grid-cols-8">
         <div className="sidebar col-span-1 lg:col-span-1 grid grid-rows-34 bg-black bg-opacity-25">
-          <button className="compose-button row-span-1 bg-yahoo-light-purple rounded-lg opacity-100 m-4 text-white">
+          <button
+            className={`compose-button row-span-1 bg-yahoo-light-purple rounded-lg opacity-100 m-4 text-white ${
+              showEmailComposeModal ? "pointer-events-none" : ""
+            }`}
+            onClick={() => handleComposeEmail()}
+          >
             Compose
           </button>
           <div className="inbox-content-filter row-span-1 m-1 flex flex-col items-center">
@@ -322,7 +507,7 @@ const Inbox = () => {
             >
               Inbox
             </p>
-            <p
+            {/* <p
               className={`text-center md:text-md lg:text-lg mt-2 w-5/6 text-yahoo-white cursor-pointer rounded-sm p-2 ${
                 activeView === "sent"
                   ? "bg-yahoo-light-purple bg-opacity-60"
@@ -341,7 +526,7 @@ const Inbox = () => {
               onClick={() => setActiveView("unread")}
             >
               Unread
-            </p>
+            </p> */}
           </div>
           <hr className="row-span-1 bg-yahoo-grey w-5/6 justify-self-center opacity-25"></hr>
           <div className="folder-content row-span-29 pl-4 lg:pl-5">
@@ -361,60 +546,34 @@ const Inbox = () => {
         </div>
         <div className="inbox-content col-span-5 lg:col-span-7 bg-yahoo-white">
           <div className="inbox-content-header flex justify-between items-center">
-            <img
-              src={`${
-                selectAllEmailsOnPage ? checkboxChecked : checkboxUnchecked
-              }`}
+            {/* <img
+              src={`${mainSelectorBox}`}
               alt="select-all"
-              className="w-8 h-8 cursor-pointer ml-1 mt-1"
-              onClick={handleSelectAllEmailsOnPage}
+              className="w-8 h-8 cursor-pointer ml-1 mt-1 pointer-events-none"
+              // onClick={() => handleSelectAllEmailsOnPage()}
             />
             <img src={folderMove} alt="folder-move" className="w-8 h-8 mt-1" />
             <img
               src={folderTrash}
               alt="folder-trash"
               className="w-8 h-8 mr-1 mt-1"
-            />
+            /> */}
           </div>
           <hr className="bg-black w-full mt-2 mb-2"></hr>
-          <div className="inbox-content-body flex flex-col items-center pl-2 pr-2">
-            {listOfEmails.length > 0 &&
-              listOfEmails.map((email, index) => (
-                <div
-                  key={index} // Important for performance optimization
-                  className="email-container grid grid-cols-12 grid-rows-1 items-center w-full bg-yahoo-light-purple bg-opacity-25 p-2 rounded-md mb-2"
-                >
-                  {/* <div className="flex items-center"> */}
-                    <img
-                      className="checkbox w-6 h-6 col-span-1"
-                      src={`${
-                        selectedEmails.includes(email.id)
-                          ? checkboxChecked
-                          : checkboxUnchecked
-                      }`}
-                      alt="checkbox"
-                    />
-                    <p className="sender col-start-2 col-span-1 text-ellipsis overflow-hidden">
-                      {email.sender_id}
-                    </p>
-                    <p className="subject text-yahoo-grey col-start-3 col-span-2 text-ellipsis overflow-hidden">
-                      {email.subject}
-                    </p>
-                  {/* </div> */}
-                  <p
-                    className="body text-yahoo-grey col-start-5 col-span-5 bg-white text-ellipsis overflow-hidden"
-                  >
-                    {truncateBody(email.body)}
-                  </p>
-
-                  <p className="date col-start-11 col-span-2 text-yahoo-grey">{email.sent_at}</p>
-                </div>
-              ))}
-          </div>
+          {!emailOpened && (
+            <div className="inbox-content-body flex flex-col items-center pl-2 pr-2">
+              <EmailListContainer
+                // selectedEmails={selectedEmails}
+                listOfEmails={listOfEmails}
+              />
+            </div>
+          )}
+          {emailOpened && <EmailView email={activeEmail} />}
         </div>
       </div>
       {isDeleteModalOpen && <ConfirmDeleteModal folder={activeFolder} />}
       {isRenameModalOpen && <RenameModal folder={activeFolder} />}
+      {showEmailComposeModal && <EmailComposeModal />}
     </div>
   );
 };
