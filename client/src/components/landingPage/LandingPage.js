@@ -2,7 +2,7 @@ import { React, useState, useEffect } from "react";
 import * as API from "../../api/index";
 import { useGoogleLogin } from "@react-oauth/google";
 import googleIcon from "../../assets/google-icon-logo-svgrepo-com.svg";
-import './LandingPage.css';
+import "./LandingPage.css";
 import Loader from "../loader/Loader";
 import Cookies from "js-cookie";
 const LandingPage = () => {
@@ -68,7 +68,7 @@ const LandingPage = () => {
             const now = new Date();
 
             // Save token as cookie
-            Cookies.set("jwt", response['token'], {
+            Cookies.set("jwt", response["token"], {
               expires: now.setDate(now.getDate() + 1),
             });
           }
@@ -97,35 +97,33 @@ const LandingPage = () => {
       ) : (
         <div className="bg-gradient-to-b from-yahoo-purple to-white h-screen w-full">
           <div className="flex justify-center items-center h-full">
-              <div className="bg-white rounded-2xl shadow-2xl p-5 w-1/3 signin-card">
-                <div className="flex flex-col items-center">
-                  <h1>
-                    <span className="text-4xl font-bold text-yahoo-purple">
-                      yahoo
-                      <span className="text-yahoo-purple italic">!</span>
-                    </span>
-                  </h1>
-                  <h2 className="text-2xl font-bold mt-10">Sign in</h2>
-                  <div
-                    id="signInButton"
-                    className="py-2 px-4 rounded-full mt-10"
+            <div className="bg-yahoo-white rounded-2xl shadow-2xl p-5 w-1/3 signin-card">
+              <div className="flex flex-col items-center">
+                <h1>
+                  <span className="text-4xl font-bold text-yahoo-purple">
+                    yahoo
+                    <span className="text-yahoo-purple italic">!</span>
+                    <span className="text-yahoo-grey"> mail</span>
+                  </span>
+                </h1>
+                <h2 className="text-2xl font-bold mt-10">Sign in</h2>
+                <div id="signInButton" className="py-2 px-4 rounded-full mt-10">
+                  <button
+                    className="py-2 px-4 rounded-md mt-2 border-2 shadow-sm hover:shadow-inner"
+                    onClick={login}
                   >
-                    <button
-                      className="py-2 px-4 rounded-md mt-2 border-2 shadow-sm hover:shadow-inner"
-                      onClick={login}
-                    >
-                      <span className="flex items-center">
-                        <img
-                          className="google-icon w-7 mr-3"
-                          src={googleIcon}
-                          alt="google icon"
-                        />
-                        <span className="ml-2">Sign in with Google</span>
-                      </span>
-                    </button>
-                  </div>
+                    <span className="flex items-center">
+                      <img
+                        className="google-icon w-7 mr-3"
+                        src={googleIcon}
+                        alt="google icon"
+                      />
+                      <span className="ml-2">Sign in with Google</span>
+                    </span>
+                  </button>
                 </div>
               </div>
+            </div>
           </div>
         </div>
       )}

@@ -83,12 +83,46 @@ const checkToken = async (req, res) => {
         return res.json({ valid: false, message: "Invalid token" });
       }
 
-      return res.json({ valid: true });
+      return res.json({ valid: true, user: jwt.decode(token) });
     });
   }
 };
 
+const getUser = async (req, res) => {
+  const count = await User.countDocuments();
+
+  if (count === 0) {
+    return res.status(200).json({ user: null });
+  }
+
+  const user = await User.findOne({ email: req.query.email });
+
+  if (!user) {
+    return res.status(200).json({ user: null });
+  }
+
+  return res.status(200).json({ user });
+};
+
+const getAllUsers = async (req, res) => {
+  const count = await User.countDocuments();
+
+  if (count === 0) {
+    return res.status(200).json({ users: null });
+  }
+
+  const users = await User.find();
+
+  if (!users) {
+    return res.status(200).json({ users: null });
+  }
+
+  return res.status(200).json({ users });
+}
+
 module.exports = {
   signinController,
-  checkToken
+  checkToken,
+  getUser,
+  getAllUsers,
 };

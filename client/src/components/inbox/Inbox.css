@@ -20,3 +20,17 @@
 .inbox-view {
     animation: 1s fadeIn;
 }
+
+.profile-modal-overlay {
+    /* Adjust position to keep the navbar above the modal */
+    position: fixed;
+    top: 80px;
+    /* Adjust based on navbar height */
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 80px);
+    /* Subtract navbar height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
