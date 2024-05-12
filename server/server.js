@@ -5,6 +5,8 @@ const app = express();
 const cors = require("cors");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/userRoutes");
+const emailRoutes = require("./routes/emailRoutes");
+const bodyParser = require("body-parser");
 const allowedOrigins = [
   "https://enhanced-email-automated-app-frontend.onrender.com",
   "http://localhost:3000",
@@ -24,12 +26,14 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // Routes
 app.get("/", (req, res) => {
     res.send("Server running");
 })
 app.use("/api/users", userRoutes);
+app.use("/api/emails", emailRoutes);
 
 const PORT = process.env.REACT_APP_PORT || 5000;
 

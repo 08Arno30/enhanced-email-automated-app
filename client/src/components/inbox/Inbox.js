@@ -7,12 +7,13 @@ import folderClose from "../../assets/folder-close-svgrepo-com.svg";
 import folderOpen from "../../assets/folder-open-svgrepo-com.svg";
 import folderPlus from "../../assets/folder-plus-svgrepo-com.svg";
 import folderOptions from "../../assets/options-svgrepo-com.svg";
-// import folderMove from "../../assets/upload-folder-svgrepo-com.svg";
-// import folderTrash from "../../assets/trash-svgrepo-com.svg";
-// import checkboxUnchecked from "../../assets/checkbox-unchecked-svgrepo-com.svg";
-// import checkboxChecked from "../../assets/checkbox-checked-svgrepo-com.svg";
+import folderMove from "../../assets/upload-folder-svgrepo-com.svg";
+import folderTrash from "../../assets/trash-svgrepo-com.svg";
+import checkboxUnchecked from "../../assets/checkbox-unchecked-svgrepo-com.svg";
+import checkboxChecked from "../../assets/checkbox-checked-svgrepo-com.svg";
 // import someCheckboxChecked from "../../assets/add-minus-square-svgrepo-com.svg";
 import goBack from "../../assets/arrow-back-basic-svgrepo-com.svg";
+import emptyInbox from "../../assets/empty-inbox.svg";
 
 //components
 import Navbar from "../navbar/Navbar";
@@ -21,7 +22,10 @@ import Profile from "../profile/Profile";
 const Inbox = () => {
   const [showProfileModal, setShowProfileModal] = React.useState(false);
   const [userProfile, setUserProfile] = useState(null);
-  const [activeView, setActiveView] = useState("inbox");
+  const [userEmail, setUserEmail] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [userLanguage, setUserLanguage] = useState(null);
+  const [activeView, setActiveView] = useState("Inbox");
   const [folderList, setFolderList] = useState([]);
   const [activeFolder, setActiveFolder] = useState("");
   const [showOptions, setShowOptions] = useState(
@@ -30,12 +34,23 @@ const Inbox = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
-  // const [mainSelectorBox, setMainSelectorBox] = useState(checkboxUnchecked);
+  const [mainSelectorBox, setMainSelectorBox] = useState(checkboxUnchecked);
   const [listOfEmails, setListOfEmails] = useState([]);
-  const [selectedEmails, setSelectedEmails] = useState([]);
+  const [sentEmails, setSentEmails] = useState([]);
+  const [trashedEmails, setTrashedEmails] = useState([]);
   const [emailOpened, setEmailOpened] = useState(null);
   const [activeEmail, setActiveEmail] = useState(null);
   const [showEmailComposeModal, setShowEmailComposeModal] = useState(false);
+  const [inboxCheckedState, setInboxCheckedState] = useState(
+    new Array(listOfEmails.length).fill(false)
+  );
+  const [sentCheckedState, setSentCheckedState] = useState(
+    new Array(sentEmails.length).fill(false)
+  );
+  const [trashedCheckedState, setTrashedCheckedState] = useState(
+    new Array(trashedEmails.length).fill(false)
+  );
+  const [emailSelected, setEmailSelected] = useState(false);
 
   const handleToggleFolderOptions = (folderIndex) => {
     setShowOptions((prevOptions) => {
@@ -212,7 +227,183 @@ const Inbox = () => {
     setActiveEmail(email);
   };
 
-  const EmailListContainer = React.memo(({ selectedEmails, listOfEmails }) => {
+  // Helper function to format the email date
+  const formatEmailDate = (timestamp, preferred_language) => {
+    const emailDate = new Date(timestamp);
+    const today = new Date();
+
+    const within24Hours =
+      // Check if hours difference is less than 24
+      Math.abs(today.getHours() - emailDate.getHours()) < 24 &&
+      emailDate.getMonth() === today.getMonth() &&
+      emailDate.getFullYear() === today.getFullYear();
+
+    const sameYear = emailDate.getFullYear() === today.getFullYear();
+
+    if (within24Hours) {
+      let dateString = "";
+      const time = emailDate.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false, // Disable AM/PM
+      });
+
+      dateString.concat(time);
+
+      if (emailOpened) {
+        const hoursPassed = Math.floor((today - emailDate) / (1000 * 60 * 60));
+        const minutesPassed = Math.floor((today - emailDate) / (1000 * 60));
+        const secondsPassed = Math.floor((today - emailDate) / 1000);
+
+        if (hoursPassed < 1) {
+          if (minutesPassed < 1) {
+            return dateString.concat(` (${secondsPassed} seconds ago)`);
+          }
+          return dateString.concat(` (${minutesPassed} minutes ago)`);
+        }
+
+        const sameDay = today.getDate() === emailDate.getDate();
+        if (sameDay) {
+          const weekDay = new Intl.DateTimeFormat(preferred_language, {
+            weekday: "short",
+          });
+          return dateString.concat(
+            `${weekDay.format(emailDate)}, ${time} (${hoursPassed} hours ago)`
+          );
+        } else {
+          return dateString.concat(`${time} (${hoursPassed} hours ago)`);
+        }
+      }
+
+      return emailDate.toLocaleDateString([], {
+        day: "2-digit",
+        month: "short",
+      });
+    } else if (sameYear) {
+      let dateString = "";
+
+      if (emailOpened) {
+        const daysPassed = Math.floor(
+          (today - emailDate) / (1000 * 60 * 60 * 24)
+        );
+        const monthsPassed = Math.floor(
+          (today - emailDate) / (1000 * 60 * 60 * 24 * 30)
+        );
+        const date = new Intl.DateTimeFormat(preferred_language, {
+          day: "2-digit",
+          month: "short",
+        });
+        const time = emailDate.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false, // Disable AM/PM
+        });
+
+        dateString.concat(date.format(emailDate), ", ", time);
+
+        if (monthsPassed < 1) {
+          dateString.concat(` (${daysPassed} days ago)`);
+        } else {
+          const weekDay = new Intl.DateTimeFormat(preferred_language, {
+            weekday: "short",
+          });
+
+          dateString = weekDay.format(emailDate);
+          dateString.concat(", ", date, ", ", time);
+        }
+
+        return dateString;
+      }
+
+      return new Intl.DateTimeFormat(preferred_language, {
+        day: "2-digit",
+        month: "long",
+      }).format(emailDate);
+    } else {
+      let dateString = "";
+
+      if (emailOpened) {
+        const date = new Intl.DateTimeFormat(preferred_language, {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+        const time = emailDate.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false, // Disable AM/PM
+        });
+
+        dateString.concat(date.format(emailDate), ", ", time);
+
+        return dateString;
+      }
+
+      return emailDate.toLocaleDateString(preferred_language, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+    }
+  };
+
+  const handleEmailTrashId = (email, index) => {
+    if (!emailOpened) {
+      if (email.sender_id === userEmail) {
+        return (
+          <>
+            <input
+              type="checkbox"
+              id={`email-${index}`}
+              checked={trashedCheckedState[index]}
+              onChange={() => handleSelectEmail(index)}
+            />
+            <p
+              className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+              onClick={() => handleOpenEmail(email)}
+            >
+              to: {email.recipient_id}
+            </p>
+          </>
+        );
+      } else {
+        return (
+          <>
+            <input
+              type="checkbox"
+              id={`email-${index}`}
+              checked={trashedCheckedState[index]}
+              onChange={() => handleSelectEmail(index)}
+            />
+            <p
+              className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+              onClick={() => handleOpenEmail(email)}
+            >
+              from: {email.sender_id}
+            </p>
+          </>
+        );
+      }
+    } else {
+      if (email.sender_id === userEmail) {
+        return (
+          <>
+            <p className="sender text-yahoo-grey">To: </p>
+            <p className="sender ml-5">{email.recipient_id}</p>
+          </>
+        );
+      } else {
+        return (
+          <>
+            <p className="sender text-yahoo-grey">From: </p>
+            <p className="sender ml-5">{email.sender_id}</p>
+          </>
+        );
+      }
+    }
+  };
+
+  const EmailListContainer = React.memo(({ listOfEmails }) => {
     return (
       <>
         {listOfEmails.length > 0 &&
@@ -220,32 +411,63 @@ const Inbox = () => {
             <div
               key={index} // Important for performance optimization
               className="email-container cursor-pointer grid grid-cols-12 grid-rows-1 items-center w-full bg-yahoo-light-purple bg-opacity-25 p-2 rounded-md mb-2"
-              onClick={() => handleOpenEmail(email)}
             >
-              <span className="col-start-1 col-span-1 flex items-center">
+              <span className="col-start-1 col-span-2 flex items-center">
                 {/* <img
                   className="checkbox w-6 h-6 col-span-1 cursor-default"
-                  src={`${
-                    selectedEmails.includes(email)
-                      ? checkboxChecked
-                      : checkboxUnchecked
-                  }`}
+                  src={selectedEmailImage}
                   alt="checkbox"
-                  onClick={() => handleSelectEmail(email)}
+                  onClick={() => handleSelectEmail(index)}
                 /> */}
-                <p className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3">
-                  {email.sender_id}
-                </p>
+                {activeView === "Inbox" && (
+                  <>
+                    <input
+                      type="checkbox"
+                      id={`email-${index}`}
+                      checked={inboxCheckedState[index]}
+                      onChange={() => handleSelectEmail(index)}
+                    />
+                    <p
+                      className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+                      onClick={() => handleOpenEmail(email)}
+                    >
+                      {email.sender_id}
+                    </p>
+                  </>
+                )}
+                {activeView === "Sent" && (
+                  <>
+                    <input
+                      type="checkbox"
+                      id={`email-${index}`}
+                      checked={sentCheckedState[index]}
+                      onChange={() => handleSelectEmail(index)}
+                    />
+                    <p
+                      className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+                      onClick={() => handleOpenEmail(email)}
+                    >
+                      to: {email.recipient_id}
+                    </p>
+                  </>
+                )}
+                {activeView === "Trash" && handleEmailTrashId(email, index)}
               </span>
-              <span className="flex items-center w-full col-start-2 col-span-9 ml-8">
+              <span
+                className="flex items-center w-full col-start-3 col-span-9 ml-8"
+                onClick={() => handleOpenEmail(email)}
+              >
                 <p className="subject text-yahoo-grey whitespace-nowrap w-full text-ellipsis overflow-hidden">
                   {email.subject} - {email.body}
                 </p>
                 <p className="body text-yahoo-grey "></p>
               </span>
 
-              <p className="date col-start-12 col-span-1 text-sm text-yahoo-grey">
-                {email.sent_at}
+              <p
+                className="date col-start-12 col-span-1 text-sm text-yahoo-grey"
+                onClick={() => handleOpenEmail(email)}
+              >
+                {formatEmailDate(email.sent_at, userLanguage)}
               </p>
             </div>
           ))}
@@ -275,10 +497,23 @@ const Inbox = () => {
         <div className="email-content mt-10 ml-10">
           <div className="email-content-header flex items-center justify-between w-full">
             <span className="sender flex items-center">
-              <p className="sender text-yahoo-grey">From: </p>
-              <p className="sender ml-5">{email.sender_id}</p>
+              {activeView === "Inbox" && (
+                <p className="sender text-yahoo-grey">From: </p>
+              )}
+              {activeView === "Sent" && (
+                <p className="sender text-yahoo-grey">To: </p>
+              )}
+              {activeView === "Inbox" && (
+                <p className="sender ml-5">{email.sender_id}</p>
+              )}
+              {activeView === "Sent" && (
+                <p className="sender ml-5">{email.recipient_id}</p>
+              )}
+              {activeView === "Trash" && handleEmailTrashId(email)}
             </span>
-            <span className="date text-yahoo-grey">{email.sent_at}</span>
+            <span className="date text-yahoo-grey">
+              {formatEmailDate(email.sent_at, userLanguage)}
+            </span>
           </div>
           <p className="body mt-16 ml-20 pr-24">{email.body}</p>
         </div>
@@ -318,58 +553,168 @@ const Inbox = () => {
   };
 
   useEffect(() => {
-    setFolderList(["inbox", "drafts", "sent", "trash"]);
-    const mockEmails = [
-      {
-        sender_id: 1,
-        recipient_id: 2,
-        subject: "Test email",
-        body: "This is a test email.",
-        original_language: "en",
-        translated_body: "Esto es un correo de prueba.",
-        sent_at: "random date",
-        received_at: "random date",
-        is_sent: true,
-        is_urgent: true,
-      },
-      {
-        sender_id: 2,
-        recipient_id: 2,
-        subject: "Test email",
-        body: "This is a test email.",
-        original_language: "en",
-        translated_body: "Esto es un correo de prueba.",
-        sent_at: "random date",
-        received_at: "random date",
-        is_sent: true,
-        is_urgent: true,
-      },
-      {
-        sender_id: 3,
-        recipient_id: 1,
-        subject: "Test email",
-        body: "Please find attached a copy of your payment notification. How to open your payment notification? In order to open your payment notification you will need Adobe Reader installed on your computer. If you don't have Adobe Reader installed on your computer, please refer to the Adobe Website to download. Please do not reply as this was sent from an unattended mailbox. Kind Regards, Payment Notifications",
-        original_language: "en",
-        translated_body: "Esto es un correo de prueba.",
-        sent_at: "random date",
-        received_at: "random date",
-        is_sent: true,
-        is_urgent: true,
-      },
-    ];
-    setListOfEmails(mockEmails);
     if (Cookies.get("jwt")) {
-      const getUser = async () => {
+      // test if token is still valid
+      const testToken = async () => {
+        const response = await API.checkToken(Cookies.get("jwt"));
+
+        if (!response.valid) {
+          Cookies.remove("jwt");
+          window.location.reload();
+        }
+      };
+
+      testToken();
+      const getUserData = async () => {
         const response = await API.getUser(Cookies.get("jwt"));
 
         if (response && response.user) {
           setUserProfile(response.user);
+          setUserEmail(response.user.email);
+          setUserId(response.user._id);
+          setUserLanguage(response.user.preferred_language);
+
+          // set emails
+          const emailsResponse = await API.getEmails(response.user._id);
+
+          if (emailsResponse && emailsResponse.result) {
+            const uniqueEmails = new Set();
+            const finalEmailsList = [];
+
+            const senderPromises = emailsResponse.result.map(async (email) => {
+              const senderResponse = await API.getUser(
+                Cookies.get("jwt"),
+                null,
+                email.sender_id
+              );
+              if (senderResponse && senderResponse.user) {
+                email.sender_id = senderResponse.user.email;
+                return email;
+              }
+              return null;
+            });
+
+            const resolvedEmails = await Promise.all(senderPromises);
+
+            resolvedEmails.forEach((email) => {
+              if (email && !uniqueEmails.has(email._id)) {
+                uniqueEmails.add(email._id);
+                finalEmailsList.push(email);
+              }
+            });
+
+            // sort emails by date
+            finalEmailsList.sort(
+              (a, b) => new Date(b.sent_at) - new Date(a.sent_at)
+            );
+
+            setListOfEmails(finalEmailsList);
+
+            const allEmailsResponse = await API.getAllEmails();
+
+            if (allEmailsResponse && allEmailsResponse.result) {
+              const sentEmails = allEmailsResponse.result.filter(
+                (email) =>
+                  email.sender_id === userId && email.is_deleted === false
+              );
+
+              // Promise array to hold recipient email fetches
+              const recipientEmailPromises = sentEmails.map(async (email) => {
+                return await API.getUser(
+                  Cookies.get("jwt"),
+                  null,
+                  email.recipient_id
+                );
+              });
+
+              // Wait for all recipient email fetches to complete
+              const recipientEmails = await Promise.all(recipientEmailPromises);
+
+              // Modify sentEmails based on fetched recipient emails
+              const modifiedSentEmails = sentEmails.map((email, index) => {
+                return {
+                  ...email,
+                  sender_id: userEmail,
+                  recipient_id: recipientEmails[index].user.email,
+                };
+              });
+
+              // sort sentEmails by date
+              modifiedSentEmails.sort(
+                (a, b) => new Date(b.sent_at) - new Date(a.sent_at)
+              );
+
+              setSentEmails(modifiedSentEmails);
+              setSentCheckedState(
+                new Array(modifiedSentEmails.length).fill(false)
+              );
+            }
+
+            if (allEmailsResponse && allEmailsResponse.result) {
+              const deletedEmails = allEmailsResponse.result.filter(
+                (email) =>
+                  (email.recipient_id === userId && email.is_deleted) ||
+                  (email.sender_id === userId && email.is_deleted)
+              );
+
+              // Promise array to hold recipient email fetches
+              const recipientEmailPromises = deletedEmails.map(
+                async (email) => {
+                  return await API.getUser(
+                    Cookies.get("jwt"),
+                    null,
+                    email.recipient_id
+                  );
+                }
+              );
+
+              // Wait for all recipient email fetches to complete
+              const recipientEmails = await Promise.all(recipientEmailPromises);
+
+              // Promise array to hold recipient email fetches
+              const senderEmailPromises = deletedEmails.map(async (email) => {
+                return await API.getUser(
+                  Cookies.get("jwt"),
+                  null,
+                  email.sender_id
+                );
+              });
+
+              // Wait for all sender email fetches to complete
+              const senderEmails = await Promise.all(senderEmailPromises);
+
+              // Modify deletedEmails based on fetched recipient and sender emails
+              const modifiedDeletedEmails = deletedEmails.map(
+                (email, index) => {
+                  return {
+                    ...email,
+                    sender_id: senderEmails[index].user.email,
+                    recipient_id: recipientEmails[index].user.email,
+                  };
+                }
+              );
+
+              // sort deletedEmails by date
+              modifiedDeletedEmails.sort(
+                (a, b) => new Date(b.sent_at) - new Date(a.sent_at)
+              );
+
+              setTrashedEmails(modifiedDeletedEmails);
+              setTrashedCheckedState(
+                new Array(modifiedDeletedEmails.length).fill(false)
+              );
+            }
+
+            setInboxCheckedState(new Array(finalEmailsList.length).fill(false));
+          }
         }
       };
 
-      getUser();
+      getUserData();
+    } else {
+      window.location = "#/login-page";
     }
-  }, []);
+  }, [userId, userEmail]);
 
   // const handleSelectAllEmailsOnPage = () => {
   //   if (selectedEmails.length === listOfEmails.length) {
@@ -388,31 +733,156 @@ const Inbox = () => {
   //   }
   // };
 
-  // const handleSelectEmail = (email) => {
-  //   // only select the email that was clicked
-  //   if (selectedEmails.includes(email)) {
-  //     setSelectedEmails((prevList) =>
-  //       prevList.filter((prevEmail) => prevEmail !== email)
-  //     );
-  //   } else {
-  //     setSelectedEmails((prevList) => [...prevList, email]);
-  //   }
+  const handleSelectEmail = (position) => {
+    let checkedState;
 
-  //   if (selectedEmails.length === 0) {
-  //     setMainSelectorBox(() => checkboxUnchecked);
-  //   } else if (selectedEmails.length === listOfEmails.length) {
-  //     setMainSelectorBox(() => checkboxChecked);
-  //   } else {
-  //     setMainSelectorBox(() => someCheckboxChecked);
-  //   }
-  // };
+    if (activeView === "Inbox") {
+      checkedState = inboxCheckedState;
+    } else if (activeView === "Sent") {
+      checkedState = sentCheckedState;
+    } else if (activeView === "Trash") {
+      checkedState = trashedCheckedState;
+    }
+
+    const updatedCheckedState = checkedState.map((item, index) =>
+      index === position ? !item : item
+    );
+
+    // check if one email is selected
+    let countSelected = 0;
+    updatedCheckedState.forEach((isChecked) => {
+      if (isChecked) {
+        countSelected++;
+      }
+    });
+
+    if (countSelected > 0) {
+      setEmailSelected(true);
+    } else {
+      setEmailSelected(false);
+    }
+
+    if (activeView === "Inbox") {
+      setInboxCheckedState(updatedCheckedState);
+    } else if (activeView === "Sent") {
+      setSentCheckedState(updatedCheckedState);
+    } else if (activeView === "Trash") {
+      setTrashedCheckedState(updatedCheckedState);
+    }
+  };
+
+  const handleDeleteSelectedEmails = async () => {
+    if (activeView === "Inbox") {
+      const checkedState = inboxCheckedState;
+
+      checkedState.forEach(async (isChecked, index) => {
+        if (isChecked) {
+          const response = await API.deleteEmail(
+            Cookies.get("jwt"),
+            listOfEmails[index]._id
+          );
+          if (response) {
+            console.log("Email deleted");
+          } else {
+            console.log("Email not deleted");
+          }
+
+          // remove email from list
+          setListOfEmails(
+            listOfEmails.filter((email) => email !== listOfEmails[index])
+          );
+
+          // remove email from checkedState
+          setInboxCheckedState(
+            checkedState.filter((item, idx) => idx !== index)
+          );
+        }
+      });
+    } else if (activeView === "Sent") {
+      const checkedState = sentCheckedState;
+
+      checkedState.forEach(async (isChecked, index) => {
+        if (isChecked) {
+          const response = await API.deleteEmail(
+            Cookies.get("jwt"),
+            sentEmails[index]._id
+          );
+          if (response) {
+            console.log("Email moved to bin");
+          } else {
+            console.log("Email not deleted");
+          }
+
+          // remove email from list
+          setSentEmails(
+            sentEmails.filter((email) => email !== sentEmails[index])
+          );
+
+          // remove email from checkedState
+          setSentCheckedState(
+            checkedState.filter((item, idx) => idx !== index)
+          );
+        }
+      });
+    }
+    // else if (activeView === "Trash") {
+    //   const checkedState = trashedCheckedState;
+
+    //   checkedState.forEach(async (isChecked, index) => {
+    //     if (isChecked) {
+    //       const response = await API.permanentDeleteEmail(
+    //         Cookies.get("jwt"),
+    //         trashedEmails[index]._id
+    //       );
+
+    //       if (response) {
+    //         console.log("Email deleted permanently");
+    //       } else {
+    //         console.log("Email not deleted");
+    //       }
+
+    //       // remove email from list
+    //       setTrashedEmails(
+    //         trashedEmails.filter((email) => email !== trashedEmails[index])
+    //       );
+
+    //       // remove email from checkedState
+    //       setTrashedCheckedState(
+    //         checkedState.filter((item, idx) => idx !== index)
+    //       );
+    //     }
+    //   });
+    // }
+    handleActiveView(activeView);
+  };
 
   const handleComposeEmailCancel = () => {
     setShowEmailComposeModal(false);
   };
 
-  const handleComposeEmailSend = () => {
-    setShowEmailComposeModal(false);
+  const handleComposeEmailSend = async () => {
+    const token = Cookies.get("jwt");
+    const send_to = document.getElementById("email-to").value;
+    const sent_from = userEmail;
+    const reply_to = userEmail;
+    const subject = document.getElementById("email-subject").value;
+    const body = document.getElementById("email-body").value;
+
+    const response = await API.sendEmail(
+      token,
+      send_to,
+      sent_from,
+      reply_to,
+      subject,
+      body
+    );
+
+    if (response) {
+      console.log("Email sent");
+      setShowEmailComposeModal(false);
+    } else {
+      console.log("Email not sent");
+    }
   };
 
   const handleComposeEmail = () => {
@@ -435,6 +905,7 @@ const Inbox = () => {
             <div className="compose-email-body mt-10">
               <div className="input-to-container flex mb-2">
                 <input
+                  id="email-to"
                   type="text"
                   placeholder="To"
                   className="border-b-2 border-yahoo-purple w-full bg-yahoo-white focus:outline-none p-2 pl-0"
@@ -442,6 +913,7 @@ const Inbox = () => {
               </div>
               <div className="input-subject-container mb-5 bg-yahoo-white">
                 <input
+                  id="email-subject"
                   type="text"
                   placeholder="Subject"
                   className="border-b-2 border-yahoo-purple w-full bg-yahoo-white focus:outline-none p-2 pl-0"
@@ -449,6 +921,7 @@ const Inbox = () => {
               </div>
               <div className="input-body-container flex flex-col bg-yahoo-white">
                 <textarea
+                  id="email-body"
                   type="text"
                   placeholder="Body"
                   className=" w-full bg-yahoo-white resize-none h-48 focus:outline-none p-2 pl-0"
@@ -475,6 +948,27 @@ const Inbox = () => {
     );
   });
 
+  const handleActiveView = (view) => {
+    setEmailSelected(false);
+    setActiveView(view);
+
+    setInboxCheckedState(
+      inboxCheckedState.map(() => {
+        return false;
+      })
+    );
+    setSentCheckedState(
+      sentCheckedState.map(() => {
+        return false;
+      })
+    );
+    setTrashedCheckedState(
+      trashedCheckedState.map(() => {
+        return false;
+      })
+    );
+  };
+
   return (
     <div className="inbox-view h-screen w-full overflow-y-hidden font-poppins">
       <Navbar showProfileModal={handleOpenModal} userProfile={userProfile} />
@@ -499,25 +993,35 @@ const Inbox = () => {
           <div className="inbox-content-filter row-span-1 m-1 flex flex-col items-center">
             <p
               className={`text-center md:text-md lg:text-lg mt-4 w-5/6 text-yahoo-white cursor-pointer rounded-sm p-2 ${
-                activeView === "inbox"
+                activeView === "Inbox"
                   ? "bg-yahoo-light-purple bg-opacity-60"
                   : ""
               }`}
-              onClick={() => setActiveView("inbox")}
+              onClick={() => handleActiveView("Inbox")}
             >
               Inbox
             </p>
-            {/* <p
+            <p
               className={`text-center md:text-md lg:text-lg mt-2 w-5/6 text-yahoo-white cursor-pointer rounded-sm p-2 ${
-                activeView === "sent"
+                activeView === "Sent"
                   ? "bg-yahoo-light-purple bg-opacity-60"
                   : ""
               }`}
-              onClick={() => setActiveView("sent")}
+              onClick={() => handleActiveView("Sent")}
             >
               Sent
             </p>
             <p
+              className={`text-center md:text-md lg:text-lg mt-2 w-5/6 text-yahoo-white cursor-pointer rounded-sm p-2 ${
+                activeView === "Trash"
+                  ? "bg-yahoo-light-purple bg-opacity-60"
+                  : ""
+              }`}
+              onClick={() => handleActiveView("Trash")}
+            >
+              Trash
+            </p>
+            {/* <p
               className={`text-center md:text-md lg:text-lg mt-2 w-5/6 text-yahoo-white cursor-pointer rounded-sm p-2 ${
                 activeView === "unread"
                   ? "bg-yahoo-light-purple bg-opacity-60"
@@ -545,29 +1049,132 @@ const Inbox = () => {
           </div>
         </div>
         <div className="inbox-content col-span-5 lg:col-span-7 bg-yahoo-white">
-          <div className="inbox-content-header flex justify-between items-center">
-            {/* <img
-              src={`${mainSelectorBox}`}
-              alt="select-all"
-              className="w-8 h-8 cursor-pointer ml-1 mt-1 pointer-events-none"
-              // onClick={() => handleSelectAllEmailsOnPage()}
-            />
-            <img src={folderMove} alt="folder-move" className="w-8 h-8 mt-1" />
-            <img
-              src={folderTrash}
-              alt="folder-trash"
-              className="w-8 h-8 mr-1 mt-1"
-            /> */}
-          </div>
-          <hr className="bg-black w-full mt-2 mb-2"></hr>
           {!emailOpened && (
-            <div className="inbox-content-body flex flex-col items-center pl-2 pr-2">
-              <EmailListContainer
-                // selectedEmails={selectedEmails}
-                listOfEmails={listOfEmails}
-              />
+            <div className="inbox-content-header flex justify-start items-center">
+              {/* <img
+                src={`${mainSelectorBox}`}
+                alt="select-all"
+                className="w-8 h-8 cursor-pointer ml-1 mt-1 pointer-events-none"
+                // onClick={() => handleSelectAllEmailsOnPage()}
+              /> */}
+              <p className="text-xl font-medium flex items-center mt-2 ml-3">
+                {activeView}
+              </p>
+              <hr className="bg-yahoo-grey opacity-50 w-7 rotate-90 mt-1 h-0.5"></hr>
+              {activeView !== "Trash" && (
+                <span className="flex items-center justify-between ml-3">
+                  <p
+                    className={`mr-3 mt-2 ${
+                      emailSelected
+                        ? "cursor-pointer opacity-100"
+                        : "pointer-events-none opacity-30"
+                    }`}
+                  >
+                    Move
+                  </p>
+                  <img
+                    src={folderMove}
+                    alt="folder-move"
+                    className={`w-8 h-8 mt-1 ${
+                      emailSelected
+                        ? "cursor-pointer opacity-100"
+                        : "pointer-events-none opacity-30"
+                    }`}
+                  />
+                </span>
+              )}
+              {activeView !== "Trash" && (
+                <span className="flex items-center justify-between ml-6">
+                  <p
+                    className={`mr-2 mt-2 ${
+                      emailSelected
+                        ? "cursor-pointer opacity-100"
+                        : "pointer-events-none opacity-30"
+                    }`}
+                    onClick={() => handleDeleteSelectedEmails()}
+                  >
+                    Delete
+                  </p>
+                  <img
+                    src={folderTrash}
+                    alt="folder-trash"
+                    className={`w-8 h-8 mt-1 ${
+                      emailSelected
+                        ? "cursor-pointer opacity-100"
+                        : "pointer-events-none opacity-30"
+                    }`}
+                    onClick={() => handleDeleteSelectedEmails()}
+                  />
+                </span>
+              )}
             </div>
           )}
+          <hr className="bg-black w-full mt-2 mb-2"></hr>
+          {!emailOpened &&
+            activeView === "Inbox" &&
+            listOfEmails.length > 0 && (
+              <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 overflow-y-scroll">
+                <EmailListContainer listOfEmails={listOfEmails} />
+              </div>
+            )}
+          {!emailOpened &&
+            activeView === "Inbox" &&
+            listOfEmails.length === 0 && (
+              <div className="inbox-content-body h-4/5 flex flex-col items-center justify-center pl-2 pr-2">
+                <img
+                  src={emptyInbox}
+                  alt="empty-inbox"
+                  className="w-1/3 lg:w-1/4"
+                />
+                <div className="text-center">
+                  <p className="text-lg lg:text-2xl text-yahoo-grey">
+                    No emails in this inbox
+                  </p>
+                </div>
+              </div>
+            )}
+          {!emailOpened && activeView === "Sent" && sentEmails.length > 0 && (
+            <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 overflow-y-scroll">
+              <EmailListContainer listOfEmails={sentEmails} />
+            </div>
+          )}
+          {!emailOpened && activeView === "Sent" && sentEmails.length === 0 && (
+            <div className="inbox-content-body h-4/5 flex flex-col items-center justify-center pl-2 pr-2">
+              <img
+                src={emptyInbox}
+                alt="empty-inbox"
+                className="w-1/3 lg:w-1/4"
+              />
+              <div className="text-center">
+                <p className="text-lg lg:text-2xl text-yahoo-grey">
+                  No emails in this inbox
+                </p>
+              </div>
+            </div>
+          )}
+          {!emailOpened &&
+            activeView === "Trash" &&
+            trashedEmails.length > 0 && (
+              <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 overflow-y-scroll">
+                <EmailListContainer listOfEmails={trashedEmails} />
+              </div>
+            )}
+          {!emailOpened &&
+            activeView === "Trash" &&
+            trashedEmails.length === 0 && (
+              <div className="inbox-content-body h-4/5 flex flex-col items-center justify-center pl-2 pr-2">
+                <img
+                  src={emptyInbox}
+                  alt="empty-inbox"
+                  className="w-1/3 lg:w-1/4"
+                />
+                <div className="text-center">
+                  <p className="text-lg lg:text-2xl text-yahoo-grey">
+                    No emails in this inbox
+                  </p>
+                </div>
+              </div>
+            )}
           {emailOpened && <EmailView email={activeEmail} />}
         </div>
       </div>

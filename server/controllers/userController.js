@@ -48,6 +48,19 @@ const signinController = async (req, res) => {
         }
         else {
           existingUser = await User.findOne({ email: user_email });
+
+          if (!existingUser) {
+            // create new user
+            const result = await User.create({
+              user_firstname: user_firstName,
+              user_lastname: user_lastName,
+              email: user_email,
+              user_picture: user_picture,
+            });
+
+            existingUser = result;
+          }
+
           const token = jwt.sign(
             {
               email: existingUser.email,
@@ -95,7 +108,14 @@ const getUser = async (req, res) => {
     return res.status(200).json({ user: null });
   }
 
-  const user = await User.findOne({ email: req.query.email });
+  let user = null;
+
+  if (!req.query.email && req.query.userID) {
+    user = await User.findOne({ _id: req.query.userID });
+  }
+  else if (req.query.email) {
+    user = await User.findOne({ email: req.query.email });
+  }
 
   if (!user) {
     return res.status(200).json({ user: null });

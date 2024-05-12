@@ -30,22 +30,60 @@ export const checkToken = async (token) => {
   const response = await API.post("api/users/checkToken", {
     token,
   });
+
+  if (!response) {
+    return { valid: false };
+  }
+  return response.data;
+};
+
+export const sendEmail = async (
+  token,
+  send_to,
+  sent_from,
+  reply_to,
+  subject,
+  body
+) => {
+  const user = await getUser(token);
+  const recipient = await getUser(token, send_to);
+
+  const response = await API.post("api/emails/sendEmail", {
+    sender: user,
+    email: {
+      send_to,
+      sent_from,
+      reply_to,
+      subject,
+      body,
+    },
+    recipient,
+  });
   return response.data;
 };
 
 // ========= API GETS =========
-export const getUser = async (token) => {
+export const getUser = async (token, userEmail = null, userID = null) => {
   const validToken = await checkToken(token);
 
-  if (validToken.valid) {
-    const email = validToken.user.email;
-    const params = new URLSearchParams({ email });
-    const response = await API.get("api/users/getUser?" + params.toString());
-    return response.data;
+  if (!validToken.valid) {
+    return null;
+  }
+  
+  const params = new URLSearchParams();
+  if (userEmail) {
+    params.append("email", userEmail);
+  } else if (userID) {
+    params.append("userID", userID);
+  } else {
+    // Get current user logged in (me)
+    params.append("userID", validToken.user.id);
   }
 
-  return null;
+  const response = await API.get("api/users/getUser?" + params.toString());
+  return response.data;
 };
+
 
 export const getAllUsers = async () => {
   const validToken = await checkToken();
@@ -56,4 +94,41 @@ export const getAllUsers = async () => {
   }
 
   return null;
+};
+
+export const getEmails = async (userID) => {
+  const params = new URLSearchParams({ userID });
+  const emailResponse = await API.get(
+    "api/emails/getEmails?" + params.toString()
+  );
+
+  return emailResponse.data;
+};
+
+export const getAllEmails = async () => {
+  const response = await API.get("api/emails/getAllEmails");
+  return response.data;
+}
+
+// ========= API PUTS =========
+// this deleteEmail deletes an email from all folders and moves it to the trash folder
+export const deleteEmail = async (token, emailID) => {
+  const response = await API.put("api/emails/deleteEmail", {
+    data: {
+      token,
+      emailID,
+    },
+  });
+  return response.data;
+};
+
+// ========= API DELETES =========
+export const permanentDeleteEmail = async (token, emailID) => {
+  const response = await API.delete("api/emails/permanentDeleteEmail", {
+    data: {
+      token,
+      emailID,
+    },
+  });
+  return response.data;
 };
