@@ -121,5 +121,5 @@ module.exports = {
   getAllEmailsController,
   sendEmailController,
   deleteEmailController,
-  permanentDeleteEmailController,
+//   permanentDeleteEmailController,
 };

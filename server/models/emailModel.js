@@ -19,7 +19,6 @@ const emailSchema = mongoose.Schema({
   received_at: { type: Date },
   is_deleted: { type: Boolean },
   is_urgent: { type: Boolean },
-  folder: { type: [String] },
 });
 
 module.exports = mongoose.model("Email", emailSchema);

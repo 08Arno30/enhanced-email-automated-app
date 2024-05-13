@@ -106,18 +106,29 @@ const Inbox = () => {
     );
   });
 
-  const deleteFolder = (folder) => {
-    // remove the folder from folderList and remove the corresponding option
-    setFolderList((prevList) => prevList.filter((f) => f !== folder));
-    setShowOptions((prevOptions) =>
-      prevOptions.filter((_, index) => index !== folderList.indexOf(folder))
-    );
-    // set all options false
-    setShowOptions(Array(folderList.length).fill(false));
-    setIsDeleteModalOpen(false);
+  const deleteFolder = async (folder, index) => {
+    const folderName = folderList[index];
+
+    if (folderName === activeFolder) {
+      const response = await API.deleteFolder(userId, folderName);
+
+      if (response.status === "success") {
+        // remove the folder from folderList and remove the corresponding option
+        setFolderList((prevList) => prevList.filter((f) => f !== folder));
+        setShowOptions((prevOptions) =>
+          prevOptions.filter((_, index) => index !== folderList.indexOf(folder))
+        );
+        // set all options false
+        setShowOptions(Array(folderList.length).fill(false));
+        setIsDeleteModalOpen(false);
+      }
+    } else {
+      return;
+    }
+    
   };
 
-  const ConfirmDeleteModal = React.memo(({ folder }) => {
+  const ConfirmDeleteModal = React.memo(({ folder, index }) => {
     // create modal confirm if user want to delete
     return (
       <div className="confirm-modal w-full h-screen fixed top-0 left-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -131,7 +142,7 @@ const Inbox = () => {
           <div className="buttons-container flex items-center justify-evenly w-full mt-5">
             <button
               className="delete-button bg-red-500 bg-opacity-50 text-sm lg:text-base cursor-pointer p-2 rounded-md"
-              onClick={() => deleteFolder(folder)}
+              onClick={() => deleteFolder(folder, index)}
             >
               Delete
             </button>
@@ -157,26 +168,41 @@ const Inbox = () => {
     setIsRenameModalOpen(true);
   };
 
-  const renameFolder = (newFolderName) => {
-    setFolderList((prevList) =>
-      prevList.map((folder) =>
-        folder === activeFolder ? newFolderName : folder
-      )
-    );
-    setIsRenameModalOpen(false);
-    setActiveFolder("");
-    setShowOptions(Array(folderList.length).fill(false));
-    setNewName("");
+  const renameFolder = async (oldname, newFolderName, index) => {
+    if (newFolderName === "") {
+      return;
+    }
+
+    const oldFolderNameIndex = folderList.indexOf(oldname);
+    const oldFolderName = folderList[oldFolderNameIndex];
+
+    if (newFolderName === oldFolderName) {
+      return;
+    }
+
+    const response = await API.renameFolder(userId, oldFolderName, newFolderName);
+
+    if (response.status === "success") {
+      setFolderList((prevList) =>
+        prevList.map((folder, i) => (i === index ? newFolderName : folder))
+      );
+      setIsRenameModalOpen(false);
+      setActiveFolder("");
+      setShowOptions(Array(folderList.length).fill(false));
+      setNewName("");
+    }
+
+    return response;
   };
 
-  const handleRenameKeyDown = (e) => {
+  const handleRenameKeyDown = (e, oldName, index) => {
     if (e.code === "Enter") {
-      renameFolder(newName); // Trigger renaming on Enter
+      renameFolder(oldName, newName, index); // Trigger renaming on Enter
       e.preventDefault();
     }
   };
 
-  const RenameModal = React.memo(({ folder }) => {
+  const RenameModal = React.memo(({ folder, index }) => {
     return (
       <div
         key={folder}
@@ -197,7 +223,7 @@ const Inbox = () => {
               type="text"
               placeholder={folder}
               value={newName}
-              onKeyDown={(e) => handleRenameKeyDown(e)}
+              onKeyDown={(e) => handleRenameKeyDown(e, folder, index)}
               onChange={(e) => setNewName(e.target.value)}
             />
           </div>
@@ -212,7 +238,7 @@ const Inbox = () => {
               className={`rename-button bg-yahoo-purple bg-opacity-50 text-sm lg:text-base cursor-pointer p-2 rounded-md ${
                 newName === "" ? "opacity-50 pointer-events-none" : ""
               }`}
-              onClick={() => renameFolder(newName)}
+              onClick={() => renameFolder(folder, newName, index)}
             >
               Rename
             </button>
@@ -544,8 +570,21 @@ const Inbox = () => {
     );
   }
 
-  const addFolder = () => {
-    setFolderList([...folderList, "new folder"]);
+  const addFolder = async () => {
+    let counter = 0
+
+    counter = folderList.length + 1
+    const newFolderName = `new-folder-${counter}`
+    
+    // update user's folders
+    const response = await API.addFolder(userId, newFolderName);
+    
+    if (!response || response.result.acknowledged === false) {
+      return;
+    }
+
+    // update state
+    setFolderList([...folderList, newFolderName]);
   };
 
   const handleOpenModal = () => {
@@ -573,6 +612,7 @@ const Inbox = () => {
           setUserEmail(response.user.email);
           setUserId(response.user._id);
           setUserLanguage(response.user.preferred_language);
+          setFolderList(response.user.folders);
 
           // set emails
           const emailsResponse = await API.getEmails(response.user._id);
@@ -1178,8 +1218,8 @@ const Inbox = () => {
           {emailOpened && <EmailView email={activeEmail} />}
         </div>
       </div>
-      {isDeleteModalOpen && <ConfirmDeleteModal folder={activeFolder} />}
-      {isRenameModalOpen && <RenameModal folder={activeFolder} />}
+      {isDeleteModalOpen && <ConfirmDeleteModal folder={activeFolder} index={folderList.indexOf(activeFolder)} />}
+      {isRenameModalOpen && <RenameModal folder={activeFolder} index={folderList.indexOf(activeFolder)} />}
       {showEmailComposeModal && <EmailComposeModal />}
     </div>
   );

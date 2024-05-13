@@ -18,8 +18,8 @@ router.get("/getAllEmails", getAllEmailsController);
 // Send Email
 router.post("/sendEmail", sendEmailController);
 
-// Delete Email
-router.delete("/deleteEmail", deleteEmailController);
+// Delete Email to Trash
+router.put("/deleteEmail", deleteEmailController);
 
 // Permanent Delete Email
 // router.delete("/permanentDeleteEmail", permanentDeleteEmailController);

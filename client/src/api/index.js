@@ -69,7 +69,7 @@ export const getUser = async (token, userEmail = null, userID = null) => {
   if (!validToken.valid) {
     return null;
   }
-  
+
   const params = new URLSearchParams();
   if (userEmail) {
     params.append("email", userEmail);
@@ -83,7 +83,6 @@ export const getUser = async (token, userEmail = null, userID = null) => {
   const response = await API.get("api/users/getUser?" + params.toString());
   return response.data;
 };
-
 
 export const getAllUsers = async () => {
   const validToken = await checkToken();
@@ -108,16 +107,39 @@ export const getEmails = async (userID) => {
 export const getAllEmails = async () => {
   const response = await API.get("api/emails/getAllEmails");
   return response.data;
-}
+};
 
 // ========= API PUTS =========
 // this deleteEmail deletes an email from all folders and moves it to the trash folder
 export const deleteEmail = async (token, emailID) => {
   const response = await API.put("api/emails/deleteEmail", {
-    data: {
-      token,
-      emailID,
-    },
+    token,
+    emailID,
+  });
+  return response.data;
+};
+
+export const addFolder = async (userID, folderName) => {
+  const response = await API.put("api/users/addFolder", {
+    userID,
+    folderName,
+  });
+  return response.data;
+};
+
+export const deleteFolder = async (userID, folderName) => {
+  const response = await API.put("api/users/deleteFolder", {
+    userID,
+    folderName,
+  });
+  return response.data;
+};
+
+export const renameFolder = async (userID, oldFolderName, newFolderName) => {
+  const response = await API.put("api/users/renameFolder", {
+    userID,
+    oldFolderName,
+    newFolderName,
   });
   return response.data;
 };
@@ -125,10 +147,8 @@ export const deleteEmail = async (token, emailID) => {
 // ========= API DELETES =========
 export const permanentDeleteEmail = async (token, emailID) => {
   const response = await API.delete("api/emails/permanentDeleteEmail", {
-    data: {
-      token,
-      emailID,
-    },
+    token,
+    emailID,
   });
   return response.data;
 };

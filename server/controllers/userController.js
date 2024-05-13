@@ -23,7 +23,7 @@ const signinController = async (req, res) => {
         // count number of documents with the same email
         const count = await User.countDocuments();
         let existingUser = null;
-        
+
         if (count === 0) {
           // create new user
           const result = await User.create({
@@ -45,8 +45,7 @@ const signinController = async (req, res) => {
           );
 
           return res.status(200).json({ result: existingUser, token });
-        }
-        else {
+        } else {
           existingUser = await User.findOne({ email: user_email });
 
           if (!existingUser) {
@@ -56,6 +55,7 @@ const signinController = async (req, res) => {
               user_lastname: user_lastName,
               email: user_email,
               user_picture: user_picture,
+              folders: [],
             });
 
             existingUser = result;
@@ -69,7 +69,7 @@ const signinController = async (req, res) => {
             process.env.REACT_APP_JWT_SECRET,
             { expiresIn: "1d" }
           );
-  
+
           return res.status(200).json({ result: existingUser, token });
         }
       })
@@ -85,8 +85,7 @@ const checkToken = async (req, res) => {
 
   if (!token) {
     return res.json({ valid: false });
-  }
-  else {
+  } else {
     jwt.verify(token, process.env.REACT_APP_JWT_SECRET, (err, decoded) => {
       if (err && err.name === "TokenExpiredError") {
         return res.json({ valid: false, message: "Token expired" });
@@ -112,8 +111,7 @@ const getUser = async (req, res) => {
 
   if (!req.query.email && req.query.userID) {
     user = await User.findOne({ _id: req.query.userID });
-  }
-  else if (req.query.email) {
+  } else if (req.query.email) {
     user = await User.findOne({ email: req.query.email });
   }
 
@@ -138,11 +136,93 @@ const getAllUsers = async (req, res) => {
   }
 
   return res.status(200).json({ users });
-}
+};
+
+const addFolder = async (req, res) => {
+  try {
+    const result = await User.updateOne(
+      { _id: req.body.userID },
+      { $push: { folders: req.body.folderName } }
+    );
+
+    if (!result) {
+      return res.status(500).json({ message: "Something went wrong!" });
+    }
+
+    return res.status(200).json({ result: result, success: true });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: error, message: "Something went wrong!" });
+  }
+};
+
+const deleteFolder = async (req, res) => {
+  try {
+    const result = await User.updateOne(
+      { _id: req.body.userID },
+      { $pull: { folders: req.body.folderName } }
+    );
+
+    if (!result) {
+      return res.status(500).json({ message: "Something went wrong!" });
+    }
+
+    return res.status(200).json({ result: result, success: true });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: error, message: "Something went wrong!" });
+  }
+};
+
+const renameFolder = async (req, res) => {
+  try {
+    const { userID, oldFolderName, newFolderName } = req.body;
+
+    // Validate input data (optional but recommended)
+    if (!userID || !oldFolderName || !newFolderName) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "Missing required fields: userID, oldFolderName, newFolderName",
+        });
+    }
+
+    const user = await User.findById(userID);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const folderIndex = user.folders.findIndex(
+      (folder) => folder === oldFolderName
+    );
+
+    if (folderIndex === -1) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    // Update folder name in-place (avoids unnecessary array creation)
+    user.folders[folderIndex] = newFolderName;
+
+    await user.save();
+
+    return res.status(200).json({ status: "success", message: "Folder renamed successfully" });
+  } catch (error) {
+    console.error("Error renaming folder:", error);
+    return res.status(500).json({ message: "Something went wrong!" });
+  }
+};
+
 
 module.exports = {
   signinController,
   checkToken,
   getUser,
   getAllUsers,
+  addFolder,
+  deleteFolder,
+  renameFolder,
 };
