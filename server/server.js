@@ -41,7 +41,7 @@ mongoose.set("strictQuery", false);
 
 // connect
 mongoose
-  .connect(`${process.env.MONGO_DB_URI}`)
+  .connect(`${process.env.REACT_APP_MONGO_DB_URI}`)
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

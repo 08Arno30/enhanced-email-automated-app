@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
+import toast, { Toaster } from "react-hot-toast";
 import * as API from "../../api/index";
 import "./Inbox.css";
 import folderClose from "../../assets/folder-close-svgrepo-com.svg";
@@ -121,11 +122,12 @@ const Inbox = () => {
         // set all options false
         setShowOptions(Array(folderList.length).fill(false));
         setIsDeleteModalOpen(false);
+
+        toast.success("Folder deleted successfully!");
       }
     } else {
       return;
     }
-    
   };
 
   const ConfirmDeleteModal = React.memo(({ folder, index }) => {
@@ -180,7 +182,11 @@ const Inbox = () => {
       return;
     }
 
-    const response = await API.renameFolder(userId, oldFolderName, newFolderName);
+    const response = await API.renameFolder(
+      userId,
+      oldFolderName,
+      newFolderName
+    );
 
     if (response.status === "success") {
       setFolderList((prevList) =>
@@ -190,6 +196,8 @@ const Inbox = () => {
       setActiveFolder("");
       setShowOptions(Array(folderList.length).fill(false));
       setNewName("");
+
+      toast.success("Folder renamed successfully!");
     }
 
     return response;
@@ -377,37 +385,21 @@ const Inbox = () => {
     if (!emailOpened) {
       if (email.sender_id === userEmail) {
         return (
-          <>
-            <input
-              type="checkbox"
-              id={`email-${index}`}
-              checked={trashedCheckedState[index]}
-              onChange={() => handleSelectEmail(index)}
-            />
-            <p
-              className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
-              onClick={() => handleOpenEmail(email)}
-            >
-              to: {email.recipient_id}
-            </p>
-          </>
+          <p
+            className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+            onClick={() => handleOpenEmail(email)}
+          >
+            to: {email.recipient_id}
+          </p>
         );
       } else {
         return (
-          <>
-            <input
-              type="checkbox"
-              id={`email-${index}`}
-              checked={trashedCheckedState[index]}
-              onChange={() => handleSelectEmail(index)}
-            />
-            <p
-              className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
-              onClick={() => handleOpenEmail(email)}
-            >
-              from: {email.sender_id}
-            </p>
-          </>
+          <p
+            className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+            onClick={() => handleOpenEmail(email)}
+          >
+            from: {email.sender_id}
+          </p>
         );
       }
     } else {
@@ -571,14 +563,14 @@ const Inbox = () => {
   }
 
   const addFolder = async () => {
-    let counter = 0
+    let counter = 0;
 
-    counter = folderList.length + 1
-    const newFolderName = `new-folder-${counter}`
-    
+    counter = folderList.length + 1;
+    const newFolderName = `new-folder-${counter}`;
+
     // update user's folders
     const response = await API.addFolder(userId, newFolderName);
-    
+
     if (!response || response.result.acknowledged === false) {
       return;
     }
@@ -754,7 +746,7 @@ const Inbox = () => {
     } else {
       window.location = "#/login-page";
     }
-  }, [userId, userEmail]);
+  }, [userId, userEmail, activeView]);
 
   // const handleSelectAllEmailsOnPage = () => {
   //   if (selectedEmails.length === listOfEmails.length) {
@@ -827,6 +819,10 @@ const Inbox = () => {
             console.log("Email not deleted");
           }
 
+          const sentEmailIndex = sentEmails.findIndex(
+            (email) => email._id === listOfEmails[index]._id
+          );
+
           // remove email from list
           setListOfEmails(
             listOfEmails.filter((email) => email !== listOfEmails[index])
@@ -835,6 +831,16 @@ const Inbox = () => {
           // remove email from checkedState
           setInboxCheckedState(
             checkedState.filter((item, idx) => idx !== index)
+          );
+
+          // remove email from sent list
+          setSentEmails(
+            sentEmails.filter((email) => email !== listOfEmails[index])
+          );
+
+          // remove email from sent checkedState
+          setSentCheckedState(
+            checkedState.filter((item, idx) => idx !== sentEmailIndex)
           );
         }
       });
@@ -853,6 +859,10 @@ const Inbox = () => {
             console.log("Email not deleted");
           }
 
+          const inboxEmailIndex = listOfEmails.findIndex(
+            (email) => email._id === sentEmails[index]._id
+          );
+
           // remove email from list
           setSentEmails(
             sentEmails.filter((email) => email !== sentEmails[index])
@@ -861,6 +871,16 @@ const Inbox = () => {
           // remove email from checkedState
           setSentCheckedState(
             checkedState.filter((item, idx) => idx !== index)
+          );
+
+          // remove email from inbox list
+          setListOfEmails(
+            listOfEmails.filter((email) => email !== sentEmails[index])
+          );
+
+          // remove email from inbox checkedState
+          setInboxCheckedState(
+            checkedState.filter((item, idx) => idx !== inboxEmailIndex)
           );
         }
       });
@@ -893,6 +913,9 @@ const Inbox = () => {
     //     }
     //   });
     // }
+    toast('Email(s) moved to trash', {
+      icon: '🗑️'
+    });
     handleActiveView(activeView);
   };
 
@@ -920,6 +943,9 @@ const Inbox = () => {
     if (response) {
       console.log("Email sent");
       setShowEmailComposeModal(false);
+      toast('Email sent', {
+        icon: '✉️'
+      });
     } else {
       console.log("Email not sent");
     }
@@ -1007,10 +1033,14 @@ const Inbox = () => {
         return false;
       })
     );
+
   };
 
   return (
     <div className="inbox-view h-screen w-full overflow-y-hidden font-poppins">
+      <div>
+        <Toaster />
+      </div>
       <Navbar showProfileModal={handleOpenModal} userProfile={userProfile} />
       {showProfileModal && (
         <div className="profile-modal-overlay">
@@ -1218,8 +1248,18 @@ const Inbox = () => {
           {emailOpened && <EmailView email={activeEmail} />}
         </div>
       </div>
-      {isDeleteModalOpen && <ConfirmDeleteModal folder={activeFolder} index={folderList.indexOf(activeFolder)} />}
-      {isRenameModalOpen && <RenameModal folder={activeFolder} index={folderList.indexOf(activeFolder)} />}
+      {isDeleteModalOpen && (
+        <ConfirmDeleteModal
+          folder={activeFolder}
+          index={folderList.indexOf(activeFolder)}
+        />
+      )}
+      {isRenameModalOpen && (
+        <RenameModal
+          folder={activeFolder}
+          index={folderList.indexOf(activeFolder)}
+        />
+      )}
       {showEmailComposeModal && <EmailComposeModal />}
     </div>
   );
