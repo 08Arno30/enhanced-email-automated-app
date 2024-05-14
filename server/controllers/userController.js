@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
+const ISO6391 = require("iso-639-1");
 
 const User = require("../models/userModel");
 
@@ -216,6 +217,26 @@ const renameFolder = async (req, res) => {
   }
 };
 
+const updateLanguage = async (req, res) => {
+  try {
+    const codeForLanguage = ISO6391.getCode(req.body.language);
+    const result = await User.updateOne(
+      { _id: req.body.userID },
+      { $set: { preferred_language: codeForLanguage } }
+    );
+
+    if (!result) {
+      return res.status(500).json({ message: "Something went wrong!" });
+    }
+
+    return res.status(200).json({ result: result, success: true });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: error, message: "Something went wrong!" });
+  }
+}
+
 
 module.exports = {
   signinController,
@@ -225,4 +246,5 @@ module.exports = {
   addFolder,
   deleteFolder,
   renameFolder,
+  updateLanguage
 };

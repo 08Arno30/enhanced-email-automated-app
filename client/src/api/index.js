@@ -144,6 +144,14 @@ export const renameFolder = async (userID, oldFolderName, newFolderName) => {
   return response.data;
 };
 
+export const updateLanguage = async (userID, language) => {
+  const response = await API.put("api/users/updateLanguage", {
+    userID,
+    language,
+  });
+  return response.data;
+}
+
 // ========= API DELETES =========
 export const permanentDeleteEmail = async (token, emailID) => {
   const response = await API.delete("api/emails/permanentDeleteEmail", {

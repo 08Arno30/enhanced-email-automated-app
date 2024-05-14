@@ -746,7 +746,7 @@ const Inbox = () => {
     } else {
       window.location = "#/login-page";
     }
-  }, [userId, userEmail, activeView]);
+  }, [userId, userEmail, userLanguage, activeView]);
 
   // const handleSelectAllEmailsOnPage = () => {
   //   if (selectedEmails.length === listOfEmails.length) {
@@ -1047,11 +1047,13 @@ const Inbox = () => {
           <Profile
             userProfile={userProfile}
             setShowProfileModal={setShowProfileModal}
+            userId={userId}
+            setUserLanguage={setUserLanguage}
           />
         </div>
       )}
       <div className="body-content h-full grid grid-cols-6 lg:grid-cols-8">
-        <div className="sidebar col-span-1 lg:col-span-1 grid grid-rows-34 bg-black bg-opacity-25">
+        <div className="sidebar col-span-1 lg:col-span-1 grid grid-rows-34 bg-black bg-opacity-25 h-screen">
           <button
             className={`compose-button row-span-1 bg-yahoo-light-purple rounded-lg opacity-100 m-4 text-white ${
               showEmailComposeModal ? "pointer-events-none" : ""
@@ -1183,7 +1185,7 @@ const Inbox = () => {
           {!emailOpened &&
             activeView === "Inbox" &&
             listOfEmails.length > 0 && (
-              <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 overflow-y-scroll">
+              <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
                 <EmailListContainer listOfEmails={listOfEmails} />
               </div>
             )}
@@ -1204,7 +1206,7 @@ const Inbox = () => {
               </div>
             )}
           {!emailOpened && activeView === "Sent" && sentEmails.length > 0 && (
-            <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 overflow-y-scroll">
+            <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
               <EmailListContainer listOfEmails={sentEmails} />
             </div>
           )}
@@ -1225,7 +1227,7 @@ const Inbox = () => {
           {!emailOpened &&
             activeView === "Trash" &&
             trashedEmails.length > 0 && (
-              <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 overflow-y-scroll">
+              <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
                 <EmailListContainer listOfEmails={trashedEmails} />
               </div>
             )}
