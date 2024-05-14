@@ -52,6 +52,7 @@ const Inbox = () => {
     new Array(trashedEmails.length).fill(false)
   );
   const [emailSelected, setEmailSelected] = useState(false);
+  const [userPreviousLanguage, setUserPreviousLanguage] = useState(null);
 
   const handleToggleFolderOptions = (folderIndex) => {
     setShowOptions((prevOptions) => {
@@ -746,7 +747,7 @@ const Inbox = () => {
     } else {
       window.location = "#/login-page";
     }
-  }, [userId, userEmail, userLanguage, activeView]);
+  }, [userId, userEmail, userLanguage, activeView, userPreviousLanguage]);
 
   // const handleSelectAllEmailsOnPage = () => {
   //   if (selectedEmails.length === listOfEmails.length) {
@@ -1048,7 +1049,10 @@ const Inbox = () => {
             userProfile={userProfile}
             setShowProfileModal={setShowProfileModal}
             userId={userId}
+            userLanguage={userLanguage}
             setUserLanguage={setUserLanguage}
+            userPreviousLanguage={userPreviousLanguage}
+            setUserPreviousLanguage={setUserPreviousLanguage}
           />
         </div>
       )}

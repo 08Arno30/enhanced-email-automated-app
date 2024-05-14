@@ -62,6 +62,19 @@ export const sendEmail = async (
   return response.data;
 };
 
+export const translate = async (
+  text,
+  sourceLanguageCode="en",
+  targetLanguageCode="en"
+) => {
+  const response = await API.post("api/translate", {
+    text,
+    sourceLanguageCode,
+    targetLanguageCode,
+  });
+  return response.data;
+};
+
 // ========= API GETS =========
 export const getUser = async (token, userEmail = null, userID = null) => {
   const validToken = await checkToken(token);
@@ -150,7 +163,7 @@ export const updateLanguage = async (userID, language) => {
     language,
   });
   return response.data;
-}
+};
 
 // ========= API DELETES =========
 export const permanentDeleteEmail = async (token, emailID) => {

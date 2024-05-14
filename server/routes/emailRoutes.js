@@ -4,7 +4,7 @@ const {
   getAllEmailsController,
   sendEmailController,
   deleteEmailController,
-  permanentDeleteEmailController,
+  // permanentDeleteEmailController,
 } = require("../controllers/emailController");
 
 const router = express.Router();

@@ -6,6 +6,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/userRoutes");
 const emailRoutes = require("./routes/emailRoutes");
+const translateRoutes = require("./routes/translateRoutes");
 const bodyParser = require("body-parser");
 const allowedOrigins = [
   "https://enhanced-email-automated-app-frontend.onrender.com",
@@ -34,6 +35,7 @@ app.get("/", (req, res) => {
 })
 app.use("/api/users", userRoutes);
 app.use("/api/emails", emailRoutes);
+app.use("/api/translate", translateRoutes);
 
 const PORT = process.env.REACT_APP_PORT || 5000;
 

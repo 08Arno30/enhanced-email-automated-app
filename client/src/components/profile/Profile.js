@@ -10,8 +10,15 @@ const languages = Object.entries(langs).map(([value, label]) => ({
   label,
 }));
 
-
-const Profile = ({ userProfile, setShowProfileModal, userId, setUserLanguage }) => {
+const Profile = ({
+  userProfile,
+  setShowProfileModal,
+  userId,
+  userLanguage,
+  setUserLanguage,
+  userPreviousLanguage,
+  setUserPreviousLanguage,
+}) => {
   const selectRef = useRef(null);
   const logout = () => {
     localStorage.removeItem("user");
@@ -37,16 +44,13 @@ const Profile = ({ userProfile, setShowProfileModal, userId, setUserLanguage }) 
       (language) => language.value === selectedLanguageCode
     ).label;
 
-    const response = await API.updateLanguage(
-      userId,
-      selectedLanguage
-    );
+    const response = await API.updateLanguage(userId, selectedLanguage);
 
     if (response) {
+      setUserPreviousLanguage(userLanguage);
       setUserLanguage(selectedLanguage);
       toast.success("Language updated successfully!");
-    }
-    else {
+    } else {
       toast.error("Could not update language!");
     }
   };
