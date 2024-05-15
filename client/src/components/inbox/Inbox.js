@@ -53,6 +53,9 @@ const Inbox = () => {
   );
   const [emailSelected, setEmailSelected] = useState(false);
   const [userPreviousLanguage, setUserPreviousLanguage] = useState(null);
+  const [componentLoader, setComponentLoader] = useState(true);
+  const [showEmptyInboxMessage, setShowEmptyInboxMessage] = useState(false);
+  const [showInitialLoader, setShowInitialLoader] = useState(true);
 
   const handleToggleFolderOptions = (folderIndex) => {
     setShowOptions((prevOptions) => {
@@ -585,6 +588,20 @@ const Inbox = () => {
   };
 
   useEffect(() => {
+    if (componentLoader) {
+      if (showInitialLoader) {
+        setTimeout(() => {
+          setShowInitialLoader(false);
+          setComponentLoader(false);
+          setShowEmptyInboxMessage(true);
+        }, 2000);
+      } else {
+        setTimeout(() => {
+          setComponentLoader(false);
+          setShowEmptyInboxMessage(true);
+        }, 2000);        
+      }
+    }
     if (Cookies.get("jwt")) {
       // test if token is still valid
       const testToken = async () => {
@@ -641,7 +658,33 @@ const Inbox = () => {
               (a, b) => new Date(b.sent_at) - new Date(a.sent_at)
             );
 
-            setListOfEmails(finalEmailsList);
+            const translatedListOfEmailsPromises = finalEmailsList.map(
+              async (email) => {
+                const translatedSubject = await API.translate(
+                  email.subject,
+                  userPreviousLanguage || "en",
+                  userLanguage
+                );
+
+                const translatedBody = await API.translate(
+                  email.body,
+                  userPreviousLanguage || "en",
+                  userLanguage
+                );
+
+                return {
+                  ...email,
+                  subject: translatedSubject.translatedText,
+                  body: translatedBody.translatedText,
+                };
+              }
+            );
+
+            const translatedListOfEmails = await Promise.all(
+              translatedListOfEmailsPromises
+            );
+
+            setListOfEmails(translatedListOfEmails);
 
             const allEmailsResponse = await API.getAllEmails();
 
@@ -677,9 +720,35 @@ const Inbox = () => {
                 (a, b) => new Date(b.sent_at) - new Date(a.sent_at)
               );
 
-              setSentEmails(modifiedSentEmails);
+              const translatedSentEmailsPromises = modifiedSentEmails.map(
+                async (email) => {
+                  const translatedSubject = await API.translate(
+                    email.subject,
+                    userPreviousLanguage || "en",
+                    userLanguage
+                  );
+
+                  const translatedBody = await API.translate(
+                    email.body,
+                    userPreviousLanguage || "en",
+                    userLanguage
+                  );
+
+                  return {
+                    ...email,
+                    subject: translatedSubject.translatedText,
+                    body: translatedBody.translatedText,
+                  };
+                }
+              );
+
+              const translatedSentEmails = await Promise.all(
+                translatedSentEmailsPromises
+              );
+
+              setSentEmails(translatedSentEmails);
               setSentCheckedState(
-                new Array(modifiedSentEmails.length).fill(false)
+                new Array(translatedSentEmails.length).fill(false)
               );
             }
 
@@ -732,13 +801,41 @@ const Inbox = () => {
                 (a, b) => new Date(b.sent_at) - new Date(a.sent_at)
               );
 
-              setTrashedEmails(modifiedDeletedEmails);
+              const translatedDeletedEmailsPromises = modifiedDeletedEmails.map(
+                async (email) => {
+                  const translatedSubject = await API.translate(
+                    email.subject,
+                    userPreviousLanguage || "en",
+                    userLanguage
+                  );
+
+                  const translatedBody = await API.translate(
+                    email.body,
+                    userPreviousLanguage || "en",
+                    userLanguage
+                  );
+
+                  return {
+                    ...email,
+                    subject: translatedSubject.translatedText,
+                    body: translatedBody.translatedText,
+                  };
+                }
+              );
+
+              const translatedDeletedEmails = await Promise.all(
+                translatedDeletedEmailsPromises
+              );
+
+              setTrashedEmails(translatedDeletedEmails);
               setTrashedCheckedState(
-                new Array(modifiedDeletedEmails.length).fill(false)
+                new Array(translatedDeletedEmails.length).fill(false)
               );
             }
 
-            setInboxCheckedState(new Array(finalEmailsList.length).fill(false));
+            setInboxCheckedState(
+              new Array(translatedListOfEmails.length).fill(false)
+            );
           }
         }
       };
@@ -747,7 +844,15 @@ const Inbox = () => {
     } else {
       window.location = "#/login-page";
     }
-  }, [userId, userEmail, userLanguage, activeView, userPreviousLanguage]);
+  }, [
+    userId,
+    userEmail,
+    userLanguage,
+    activeView,
+    userPreviousLanguage,
+    componentLoader,
+    showInitialLoader
+  ]);
 
   // const handleSelectAllEmailsOnPage = () => {
   //   if (selectedEmails.length === listOfEmails.length) {
@@ -914,8 +1019,8 @@ const Inbox = () => {
     //     }
     //   });
     // }
-    toast('Email(s) moved to trash', {
-      icon: '🗑️'
+    toast("Email(s) moved to trash", {
+      icon: "🗑️",
     });
     handleActiveView(activeView);
   };
@@ -932,20 +1037,29 @@ const Inbox = () => {
     const subject = document.getElementById("email-subject").value;
     const body = document.getElementById("email-body").value;
 
+    toast("Sending email...", {
+      icon: "📨",
+      duration: 2000,
+    });
+
+    // translate subject and body to english
+    const translatedSubject = await API.translate(subject, userLanguage, "en");
+    const translatedBody = await API.translate(body, userLanguage, "en");
+
     const response = await API.sendEmail(
       token,
       send_to,
       sent_from,
       reply_to,
-      subject,
-      body
+      translatedSubject.translatedText,
+      translatedBody.translatedText
     );
 
     if (response) {
       console.log("Email sent");
       setShowEmailComposeModal(false);
-      toast('Email sent', {
-        icon: '✉️'
+      toast("Email sent", {
+        icon: "✉️",
       });
     } else {
       console.log("Email not sent");
@@ -1016,6 +1130,7 @@ const Inbox = () => {
   });
 
   const handleActiveView = (view) => {
+    setComponentLoader(true);
     setEmailSelected(false);
     setActiveView(view);
 
@@ -1034,7 +1149,6 @@ const Inbox = () => {
         return false;
       })
     );
-
   };
 
   return (
@@ -1051,7 +1165,6 @@ const Inbox = () => {
             userId={userId}
             userLanguage={userLanguage}
             setUserLanguage={setUserLanguage}
-            userPreviousLanguage={userPreviousLanguage}
             setUserPreviousLanguage={setUserPreviousLanguage}
           />
         </div>
@@ -1186,70 +1299,117 @@ const Inbox = () => {
             </div>
           )}
           <hr className="bg-black w-full mt-2 mb-2"></hr>
+          {showInitialLoader && (
+            <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
+              <div className="loader w-full h-1 z-50"></div>
+              
+            </div>
+          )}
           {!emailOpened &&
             activeView === "Inbox" &&
             listOfEmails.length > 0 && (
               <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
-                <EmailListContainer listOfEmails={listOfEmails} />
+                {componentLoader ? (
+                  <div className="loader w-full h-1 z-50"></div>
+                ) : (
+                  <EmailListContainer listOfEmails={listOfEmails} />
+                )}
               </div>
             )}
           {!emailOpened &&
             activeView === "Inbox" &&
-            listOfEmails.length === 0 && (
-              <div className="inbox-content-body h-4/5 flex flex-col items-center justify-center pl-2 pr-2">
-                <img
-                  src={emptyInbox}
-                  alt="empty-inbox"
-                  className="w-1/3 lg:w-1/4"
-                />
-                <div className="text-center">
-                  <p className="text-lg lg:text-2xl text-yahoo-grey">
-                    No emails in this inbox
-                  </p>
-                </div>
-              </div>
+            listOfEmails.length === 0 &&
+            showEmptyInboxMessage && (
+              <>
+                {componentLoader ? (
+                  <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
+                    <div className="loader w-full h-1 z-50"></div>
+                  </div>
+                ) : (
+                  <div className="inbox-content-body h-4/5 flex flex-col items-center justify-center pl-2 pr-2">
+                    <img
+                      src={emptyInbox}
+                      alt="empty-inbox"
+                      className="w-1/3 lg:w-1/4"
+                    />
+                    <div className="text-center">
+                      <p className="text-lg lg:text-2xl text-yahoo-grey">
+                        No emails in this inbox
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           {!emailOpened && activeView === "Sent" && sentEmails.length > 0 && (
             <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
-              <EmailListContainer listOfEmails={sentEmails} />
+              {componentLoader ? (
+                <div className="loader w-full h-1 z-50"></div>
+              ) : (
+                <EmailListContainer listOfEmails={sentEmails} />
+              )}
             </div>
           )}
-          {!emailOpened && activeView === "Sent" && sentEmails.length === 0 && (
-            <div className="inbox-content-body h-4/5 flex flex-col items-center justify-center pl-2 pr-2">
-              <img
-                src={emptyInbox}
-                alt="empty-inbox"
-                className="w-1/3 lg:w-1/4"
-              />
-              <div className="text-center">
-                <p className="text-lg lg:text-2xl text-yahoo-grey">
-                  No emails in this inbox
-                </p>
-              </div>
-            </div>
-          )}
+          {!emailOpened &&
+            activeView === "Sent" &&
+            sentEmails.length === 0 &&
+            showEmptyInboxMessage && (
+              <>
+                {componentLoader ? (
+                  <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
+                    <div className="loader w-full h-1 z-50"></div>
+                  </div>
+                ) : (
+                  <div className="inbox-content-body h-4/5 flex flex-col items-center justify-center pl-2 pr-2">
+                    <img
+                      src={emptyInbox}
+                      alt="empty-inbox"
+                      className="w-1/3 lg:w-1/4"
+                    />
+                    <div className="text-center">
+                      <p className="text-lg lg:text-2xl text-yahoo-grey">
+                        No emails in this inbox
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           {!emailOpened &&
             activeView === "Trash" &&
             trashedEmails.length > 0 && (
               <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
-                <EmailListContainer listOfEmails={trashedEmails} />
+                {componentLoader ? (
+                  <div className="loader w-full h-1 z-50"></div>
+                ) : (
+                  <EmailListContainer listOfEmails={trashedEmails} />
+                )}
               </div>
             )}
           {!emailOpened &&
             activeView === "Trash" &&
-            trashedEmails.length === 0 && (
-              <div className="inbox-content-body h-4/5 flex flex-col items-center justify-center pl-2 pr-2">
-                <img
-                  src={emptyInbox}
-                  alt="empty-inbox"
-                  className="w-1/3 lg:w-1/4"
-                />
-                <div className="text-center">
-                  <p className="text-lg lg:text-2xl text-yahoo-grey">
-                    No emails in this inbox
-                  </p>
-                </div>
-              </div>
+            trashedEmails.length === 0 &&
+            showEmptyInboxMessage && (
+              <>
+                {componentLoader ? (
+                  <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
+                    <div className="loader w-full h-1 z-50"></div>
+                  </div>
+                ) : (
+                  <div className="inbox-content-body h-4/5 flex flex-col items-center justify-center pl-2 pr-2">
+                    <img
+                      src={emptyInbox}
+                      alt="empty-inbox"
+                      className="w-1/3 lg:w-1/4"
+                    />
+                    <div className="text-center">
+                      <p className="text-lg lg:text-2xl text-yahoo-grey">
+                        No emails in this inbox
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           {emailOpened && <EmailView email={activeEmail} />}
         </div>

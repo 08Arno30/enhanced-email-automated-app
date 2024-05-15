@@ -64,7 +64,7 @@ export const sendEmail = async (
 
 export const translate = async (
   text,
-  sourceLanguageCode="en",
+  sourceLanguageCode,
   targetLanguageCode="en"
 ) => {
   const response = await API.post("api/translate", {

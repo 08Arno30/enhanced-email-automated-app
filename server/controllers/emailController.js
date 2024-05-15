@@ -1,5 +1,6 @@
 const Email = require("../models/emailModel");
 const sendEmail = require("../utils/sendEmail");
+const { translateController } = require("./translateController");
 
 // get user emails
 const getEmailsController = async (req, res) => {
@@ -50,8 +51,6 @@ const sendEmailController = async (req, res) => {
       recipient_id: recipient._id,
       subject: email.subject,
       body: email.body,
-      original_language: user.preferred_language,
-      translated_body: email.body,
       sent_at: new Date(),
       received_at: new Date(),
       is_deleted: false,
@@ -121,5 +120,5 @@ module.exports = {
   getAllEmailsController,
   sendEmailController,
   deleteEmailController,
-//   permanentDeleteEmailController,
+  //   permanentDeleteEmailController,
 };

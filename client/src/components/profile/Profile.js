@@ -16,7 +16,6 @@ const Profile = ({
   userId,
   userLanguage,
   setUserLanguage,
-  userPreviousLanguage,
   setUserPreviousLanguage,
 }) => {
   const selectRef = useRef(null);
@@ -44,12 +43,19 @@ const Profile = ({
       (language) => language.value === selectedLanguageCode
     ).label;
 
+    toast("Updating language...", {
+      duration: 1400,
+      icon: "⏳",
+    });
+
     const response = await API.updateLanguage(userId, selectedLanguage);
 
     if (response) {
       setUserPreviousLanguage(userLanguage);
       setUserLanguage(selectedLanguage);
-      toast.success("Language updated successfully!");
+      setTimeout(() => {
+        toast.success("Language updated successfully!");
+      }, 1500);
     } else {
       toast.error("Could not update language!");
     }
