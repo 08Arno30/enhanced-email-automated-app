@@ -45,8 +45,17 @@ export const sendEmail = async (
   subject,
   body
 ) => {
-  const user = await getUser(token);
-  const recipient = await getUser(token, send_to);
+  const userResponse = await getUser(token);
+  const user = userResponse.user;
+  const recipientResponse = await getUser(token, send_to);
+  const recipient = recipientResponse.user;
+  const classificationResponse = await classifyEmail(subject, body);
+  const isUrgent = classificationResponse.isUrgent;
+  const userHasUrgentFolder = user.folders?.includes("Urgent");
+  
+  if (isUrgent && !userHasUrgentFolder) {
+    await addFolder(user._id, "Urgent");
+  }
 
   const response = await API.post("api/emails/sendEmail", {
     sender: user,
@@ -56,9 +65,22 @@ export const sendEmail = async (
       reply_to,
       subject,
       body,
+      isUrgent
     },
     recipient,
   });
+
+  if (!response) {
+    return null;
+  }
+  
+  const emailID = response.data.result._id;
+  const emailFolders = response.data.result.folders
+
+  if (isUrgent && !emailFolders.includes("Urgent")) {
+    await addEmailFolder(emailID, "Urgent");
+  }
+
   return response.data;
 };
 
@@ -74,6 +96,15 @@ export const translate = async (
   });
   return response.data;
 };
+
+export const classifyEmail = async (emailSubject, emailBody) => {
+  const response = await API.post("api/emails/classifyEmail", {
+    emailSubject,
+    emailBody
+  });
+
+  return response.data;
+}
 
 // ========= API GETS =========
 export const getUser = async (token, userEmail = null, userID = null) => {
@@ -156,6 +187,22 @@ export const renameFolder = async (userID, oldFolderName, newFolderName) => {
   });
   return response.data;
 };
+
+export const addEmailFolder = async (emailID, folderName) => {
+  const response = await API.put("api/emails/addEmailFolder", {
+    emailID,
+    folderName,
+  });
+  return response.data;
+}
+
+export const deleteEmailFolder = async (emailID, folderName) => {
+  const response = await API.put("api/emails/deleteEmailFolder", {
+    emailID,
+    folderName,
+  });
+  return response.data;
+}
 
 export const updateLanguage = async (userID, language) => {
   const response = await API.put("api/users/updateLanguage", {

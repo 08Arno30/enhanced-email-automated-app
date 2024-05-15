@@ -1,6 +1,7 @@
+require("dotenv").config();
+
 const Email = require("../models/emailModel");
 const sendEmail = require("../utils/sendEmail");
-const { translateController } = require("./translateController");
 
 // get user emails
 const getEmailsController = async (req, res) => {
@@ -41,9 +42,9 @@ const getAllEmailsController = async (req, res) => {
 
 // send email
 const sendEmailController = async (req, res) => {
-  const user = req.body.sender.user;
+  const user = req.body.sender;
   const email = req.body.email;
-  const recipient = req.body.recipient.user;
+  const recipient = req.body.recipient;
   console.log(req.body);
   try {
     const result = await Email.create({
@@ -54,8 +55,8 @@ const sendEmailController = async (req, res) => {
       sent_at: new Date(),
       received_at: new Date(),
       is_deleted: false,
-      is_urgent: true,
-      folder: ["SENT"],
+      is_urgent: req.body.isUrgent,
+      folder: ["Sent"],
     });
 
     if (!result)
@@ -115,10 +116,86 @@ const deleteEmailController = async (req, res) => {
 //   }
 // };
 
+const classifyEmailController = async (req, res) => {
+  try {
+    const subject = req.body.emailSubject;
+    const body = req.body.emailBody;
+    const textToClassify = subject + " " + body;
+
+    const url = `https://next.levity.ai/api/ai/v3/${process.env.REACT_APP_LEVITY_BLOCK_ID}/classify`;
+    const apiKey = process.env.REACT_APP_LEVITY_API_KEY;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ textToClassify }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Levity.ai API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    console.log("Levity.ai classification:", data); // Example logging
+
+    const isUrgent = data.labels.some((label) => label.value === "urgent");
+
+    return res.status(200).json({ isUrgent: isUrgent, message: "Email classified successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Error classifying email" });
+  }
+};
+
+const addEmailFolderController = async (req, res) => {
+  try {
+    const result = await Email.updateOne(
+      { _id: req.body.emailID },
+      { $push: { folders: req.body.folderName } }
+    );
+
+    if (!result) {
+      return res.status(500).json({ message: "Something went wrong!" });
+    }
+
+    return res.status(200).json({ result: result, success: true });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: error, message: "Something went wrong!" });
+  }
+};
+
+const deleteEmailFolderController = async (req, res) => {
+  try {
+    const result = await Email.updateOne(
+      { _id: req.body.emailID },
+      { $pull: { folders: req.body.folderName } }
+    );
+
+    if (!result) {
+      return res.status(500).json({ message: "Something went wrong!" });
+    }
+
+    return res.status(200).json({ result: result, success: true });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: error, message: "Something went wrong!" });
+  }
+};
+
 module.exports = {
   getEmailsController,
   getAllEmailsController,
   sendEmailController,
   deleteEmailController,
   //   permanentDeleteEmailController,
+  classifyEmailController,
+  addEmailFolderController,
+  deleteEmailFolderController,
 };

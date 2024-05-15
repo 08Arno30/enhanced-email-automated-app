@@ -4,6 +4,9 @@ const {
   getAllEmailsController,
   sendEmailController,
   deleteEmailController,
+  classifyEmailController,
+  addEmailFolderController,
+  deleteEmailFolderController,
   // permanentDeleteEmailController,
 } = require("../controllers/emailController");
 
@@ -18,8 +21,17 @@ router.get("/getAllEmails", getAllEmailsController);
 // Send Email
 router.post("/sendEmail", sendEmailController);
 
+// Classify Email
+router.post("/classifyEmail", classifyEmailController);
+
 // Delete Email to Trash
 router.put("/deleteEmail", deleteEmailController);
+
+// Add Email to Folder
+router.put("/addEmailFolder", addEmailFolderController);
+
+// Delete Email from Folder
+router.put("/deleteEmailFolder", deleteEmailFolderController);
 
 // Permanent Delete Email
 // router.delete("/permanentDeleteEmail", permanentDeleteEmailController);

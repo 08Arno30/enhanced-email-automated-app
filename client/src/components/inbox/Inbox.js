@@ -56,6 +56,10 @@ const Inbox = () => {
   const [componentLoader, setComponentLoader] = useState(true);
   const [showEmptyInboxMessage, setShowEmptyInboxMessage] = useState(false);
   const [showInitialLoader, setShowInitialLoader] = useState(true);
+  const [folderCheckedState, setFolderCheckedState] = useState(
+    new Array(folderList.length).fill(false)
+  );
+  const [folderEmails, setFolderEmails] = useState([]);
 
   const handleToggleFolderOptions = (folderIndex) => {
     setShowOptions((prevOptions) => {
@@ -79,12 +83,10 @@ const Inbox = () => {
         key={folder}
         className="folder-button flex flex-col items-center text-yahoo-white md:text-md lg:text-lg mt-2"
       >
-        <div className="main-container flex items-center justify-between w-full">
+        <div className={`main-container flex items-center justify-between w-full ${activeView === folder ? "bg-yahoo-light-purple bg-opacity-60 rounded-tl-md rounded-bl-sm" : ""}`}>
           <div
             className="folder-main-container flex items-center justify-between w-full cursor-pointer"
-            onClick={() =>
-              setActiveFolder(folder === activeFolder ? "" : folder)
-            }
+            onClick={() => handleActiveView(folder)}
           >
             <img
               src={
@@ -117,7 +119,7 @@ const Inbox = () => {
     if (folderName === activeFolder) {
       const response = await API.deleteFolder(userId, folderName);
 
-      if (response.status === "success") {
+      if (response.success) {
         // remove the folder from folderList and remove the corresponding option
         setFolderList((prevList) => prevList.filter((f) => f !== folder));
         setShowOptions((prevOptions) =>
@@ -385,25 +387,65 @@ const Inbox = () => {
     }
   };
 
-  const handleEmailTrashId = (email, index) => {
+  const handleEmailTrashOrFolderId = (email, index) => {
     if (!emailOpened) {
       if (email.sender_id === userEmail) {
         return (
-          <p
-            className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
-            onClick={() => handleOpenEmail(email)}
-          >
-            to: {email.recipient_id}
-          </p>
+          <>
+            {folderList.includes(activeView) && (
+              <>
+                <input
+                  type="checkbox"
+                  id={`email-${index}`}
+                  checked={folderCheckedState[index]}
+                  onChange={() => handleSelectEmail(index)}
+                />
+                <p
+                  className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+                  onClick={() => handleOpenEmail(email)}
+                >
+                  to: {email.recipient_id}
+                </p>
+              </>
+            )}
+            {!folderList.includes(activeView) && (
+              <p
+                className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+                onClick={() => handleOpenEmail(email)}
+              >
+                to: {email.recipient_id}
+              </p>
+            )}
+          </>
         );
       } else {
         return (
-          <p
-            className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
-            onClick={() => handleOpenEmail(email)}
-          >
-            from: {email.sender_id}
-          </p>
+          <>
+            {folderList.includes(activeView) && (
+              <>
+                <input
+                  type="checkbox"
+                  id={`email-${index}`}
+                  checked={folderCheckedState[index]}
+                  onChange={() => handleSelectEmail(index)}
+                />
+                <p
+                  className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+                  onClick={() => handleOpenEmail(email)}
+                >
+                  from: {email.sender_id}
+                </p>
+              </>
+            )}
+            {!folderList.includes(activeView) && (
+              <p
+                className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+                onClick={() => handleOpenEmail(email)}
+              >
+                from: {email.sender_id}
+              </p>
+            )}
+          </>
         );
       }
     } else {
@@ -473,7 +515,8 @@ const Inbox = () => {
                     </p>
                   </>
                 )}
-                {activeView === "Trash" && handleEmailTrashId(email, index)}
+                {(activeView === "Trash" || folderList.includes(activeView)) &&
+                  handleEmailTrashOrFolderId(email, index)}
               </span>
               <span
                 className="flex items-center w-full col-start-3 col-span-9 ml-8"
@@ -531,7 +574,8 @@ const Inbox = () => {
               {activeView === "Sent" && (
                 <p className="sender ml-5">{email.recipient_id}</p>
               )}
-              {activeView === "Trash" && handleEmailTrashId(email)}
+              {(activeView === "Trash" || folderList.includes(activeView)) &&
+                handleEmailTrashOrFolderId(email)}
             </span>
             <span className="date text-yahoo-grey">
               {formatEmailDate(email.sent_at, userLanguage)}
@@ -599,7 +643,7 @@ const Inbox = () => {
         setTimeout(() => {
           setComponentLoader(false);
           setShowEmptyInboxMessage(true);
-        }, 2000);        
+        }, 2000);
       }
     }
     if (Cookies.get("jwt")) {
@@ -833,9 +877,91 @@ const Inbox = () => {
               );
             }
 
-            setInboxCheckedState(
-              new Array(translatedListOfEmails.length).fill(false)
-            );
+            if (
+              allEmailsResponse &&
+              allEmailsResponse.result &&
+              response.user.folders.includes(activeView)
+            ) {
+              const emailsForFolder = allEmailsResponse.result.filter(
+                (email) =>
+                  (email.recipient_id === userId &&
+                    email.folders.includes(activeView)) ||
+                  (email.sender_id === userId &&
+                    email.folders.includes(activeView))
+              );
+
+              // Promise array to hold recipient email fetches
+              const recipientEmailPromises = emailsForFolder.map(
+                async (email) => {
+                  return await API.getUser(
+                    Cookies.get("jwt"),
+                    null,
+                    email.recipient_id
+                  );
+                }
+              );
+
+              // Wait for all recipient email fetches to complete
+              const recipientEmails = await Promise.all(recipientEmailPromises);
+
+              // Promise array to hold recipient email fetches
+              const senderEmailPromises = emailsForFolder.map(async (email) => {
+                return await API.getUser(
+                  Cookies.get("jwt"),
+                  null,
+                  email.sender_id
+                );
+              });
+
+              // Wait for all sender email fetches to complete
+              const senderEmails = await Promise.all(senderEmailPromises);
+
+              // Modify emailsForFolder based on fetched recipient and sender emails
+              const modifiedEmailsForFolder = emailsForFolder.map(
+                (email, index) => {
+                  return {
+                    ...email,
+                    sender_id: senderEmails[index].user.email,
+                    recipient_id: recipientEmails[index].user.email,
+                  };
+                }
+              );
+
+              // sort emailsForFolder by date
+              modifiedEmailsForFolder.sort(
+                (a, b) => new Date(b.sent_at) - new Date(a.sent_at)
+              );
+
+              const translatedEmailsForFolderPromises =
+                modifiedEmailsForFolder.map(async (email) => {
+                  const translatedSubject = await API.translate(
+                    email.subject,
+                    userPreviousLanguage || "en",
+                    userLanguage
+                  );
+
+                  const translatedBody = await API.translate(
+                    email.body,
+                    userPreviousLanguage || "en",
+                    userLanguage
+                  );
+
+                  return {
+                    ...email,
+                    subject: translatedSubject.translatedText,
+                    body: translatedBody.translatedText,
+                  };
+                });
+
+              const translatedEmailsForFolder = await Promise.all(
+                translatedEmailsForFolderPromises
+              );
+
+              setFolderEmails(translatedEmailsForFolder);
+              setFolderCheckedState(
+                new Array(translatedEmailsForFolder.length).fill(false)
+              );
+            }
           }
         }
       };
@@ -851,7 +977,7 @@ const Inbox = () => {
     activeView,
     userPreviousLanguage,
     componentLoader,
-    showInitialLoader
+    showInitialLoader,
   ]);
 
   // const handleSelectAllEmailsOnPage = () => {
@@ -880,6 +1006,8 @@ const Inbox = () => {
       checkedState = sentCheckedState;
     } else if (activeView === "Trash") {
       checkedState = trashedCheckedState;
+    } else if (folderList.includes(activeView)) {
+      checkedState = folderCheckedState;
     }
 
     const updatedCheckedState = checkedState.map((item, index) =>
@@ -906,6 +1034,8 @@ const Inbox = () => {
       setSentCheckedState(updatedCheckedState);
     } else if (activeView === "Trash") {
       setTrashedCheckedState(updatedCheckedState);
+    } else if (folderList.includes(activeView)) {
+      setFolderCheckedState(updatedCheckedState);
     }
   };
 
@@ -1133,6 +1263,12 @@ const Inbox = () => {
     setComponentLoader(true);
     setEmailSelected(false);
     setActiveView(view);
+    
+    if (view === activeView) {
+      setActiveFolder("");
+    } else {
+      setActiveFolder(view);
+    }
 
     setInboxCheckedState(
       inboxCheckedState.map(() => {
@@ -1146,6 +1282,11 @@ const Inbox = () => {
     );
     setTrashedCheckedState(
       trashedCheckedState.map(() => {
+        return false;
+      })
+    );
+    setFolderCheckedState(
+      folderCheckedState.map(() => {
         return false;
       })
     );
@@ -1302,7 +1443,6 @@ const Inbox = () => {
           {showInitialLoader && (
             <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
               <div className="loader w-full h-1 z-50"></div>
-              
             </div>
           )}
           {!emailOpened &&
@@ -1389,6 +1529,42 @@ const Inbox = () => {
           {!emailOpened &&
             activeView === "Trash" &&
             trashedEmails.length === 0 &&
+            showEmptyInboxMessage && (
+              <>
+                {componentLoader ? (
+                  <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
+                    <div className="loader w-full h-1 z-50"></div>
+                  </div>
+                ) : (
+                  <div className="inbox-content-body h-4/5 flex flex-col items-center justify-center pl-2 pr-2">
+                    <img
+                      src={emptyInbox}
+                      alt="empty-inbox"
+                      className="w-1/3 lg:w-1/4"
+                    />
+                    <div className="text-center">
+                      <p className="text-lg lg:text-2xl text-yahoo-grey">
+                        No emails in this inbox
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          {!emailOpened &&
+            folderList.includes(activeView) &&
+            folderEmails.length > 0 && (
+              <div className="inbox-content-body flex flex-col items-center pl-2 pr-2 max-h-screen overflow-y-scroll">
+                {componentLoader ? (
+                  <div className="loader w-full h-1 z-50"></div>
+                ) : (
+                  <EmailListContainer listOfEmails={folderEmails} />
+                )}
+              </div>
+            )}
+          {!emailOpened &&
+            folderList.includes(activeView) &&
+            folderEmails.length === 0 &&
             showEmptyInboxMessage && (
               <>
                 {componentLoader ? (
