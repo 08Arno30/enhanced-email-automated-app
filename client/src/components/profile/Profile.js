@@ -76,7 +76,7 @@ const Profile = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div>
-          <div className="modal-content w-full h-3/4">
+          <div className="modal-content w-full h-1/3">
             <div className="modal-header w-full flex justify-end">
               <img
                 src={closeIcon}

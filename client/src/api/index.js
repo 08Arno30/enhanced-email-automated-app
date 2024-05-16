@@ -180,9 +180,15 @@ export const deleteEmail = async (token, emailID, userEmails) => {
 
   if (userResponse) {
     const user = userResponse.user;
-    const updatedEmail = response.data.result[0];
-    const updateResponse = await updateEmail(user._id, updatedEmail);
+    const updatedEmail = response.data.result.filter((email) => {
+      if (email._id === emailID) {
+        return email;
+      }
+      return null;
+    });
 
+    const updateResponse = await updateEmail(user._id, updatedEmail[0]);
+    console.log(updateResponse)
     if (!updateResponse) {
       return null;
     }
