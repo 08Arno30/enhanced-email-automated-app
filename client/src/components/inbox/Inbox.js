@@ -104,7 +104,7 @@ const Inbox = () => {
               alt="folder"
             />
             <div className="folder-name-container flex items-center justify-between w-full">
-              <p className="folder-name pl-2 pt-1">{folder}</p>
+              <p className="folder-name pl-2 pt-1 text-sm">{folder}</p>
             </div>
           </div>
           <img
@@ -136,6 +136,7 @@ const Inbox = () => {
         setIsDeleteModalOpen(false);
 
         toast.success("Folder deleted successfully!");
+        handleActiveView("Inbox");
       }
     } else {
       return;
@@ -1312,7 +1313,7 @@ const Inbox = () => {
                   id="email-body"
                   type="text"
                   placeholder="Body"
-                  className=" w-full bg-yahoo-white resize-none h-48 focus:outline-none p-2 pl-0"
+                  className=" w-full bg-yahoo-white resize-none h-24 focus:outline-none p-2 pl-0"
                 />
               </div>
             </div>
