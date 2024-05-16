@@ -1469,7 +1469,7 @@ const Inbox = () => {
               </p>
               <hr className="bg-yahoo-grey opacity-50 w-7 rotate-90 mt-1 h-0.5"></hr>
 
-              <span className="flex items-center justify-between ml-3">
+              {/* <span className="flex items-center justify-between ml-3">
                 <p
                   className={`mr-3 mt-2 ${
                     emailSelected
@@ -1488,7 +1488,7 @@ const Inbox = () => {
                       : "pointer-events-none opacity-30"
                   }`}
                 />
-              </span>
+              </span> */}
 
               <span className="flex items-center justify-between ml-6">
                 <p
