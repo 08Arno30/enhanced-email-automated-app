@@ -5,6 +5,9 @@ const app = express();
 const cors = require("cors");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/userRoutes");
+const emailRoutes = require("./routes/emailRoutes");
+const translateRoutes = require("./routes/translateRoutes");
+const bodyParser = require("body-parser");
 const allowedOrigins = [
   "https://enhanced-email-automated-app-frontend.onrender.com",
   "http://localhost:3000",
@@ -24,12 +27,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // Routes
 app.get("/", (req, res) => {
     res.send("Server running");
 })
 app.use("/api/users", userRoutes);
+app.use("/api/emails", emailRoutes);
+app.use("/api/translate", translateRoutes);
 
 const PORT = process.env.REACT_APP_PORT || 5000;
 
@@ -37,7 +43,7 @@ mongoose.set("strictQuery", false);
 
 // connect
 mongoose
-  .connect(`${process.env.MONGO_DB_URI}`)
+  .connect(`${process.env.REACT_APP_MONGO_DB_URI}`)
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

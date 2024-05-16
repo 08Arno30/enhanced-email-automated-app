@@ -1,11 +1,24 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import Cookies from "js-cookie";
+import * as API from "../../api/index";
+import toast, { Toaster } from "react-hot-toast";
 import closeIcon from "../../assets/close-square-svgrepo-com.svg";
-import editIcon from "../../assets/edit-svgrepo-com.svg";
+import langs from "../../utils/languages";
 
-const Profile = ({ userProfile, setShowProfileModal }) => {
-  const [isEditingLanguage, setIsEditingLanguage] = useState(false);
-  const inputRef = useRef(null);
+const languages = Object.entries(langs).map(([value, label]) => ({
+  value,
+  label,
+}));
+
+const Profile = ({
+  userProfile,
+  setShowProfileModal,
+  userId,
+  userLanguage,
+  setUserLanguage,
+  setUserPreviousLanguage,
+}) => {
+  const selectRef = useRef(null);
   const logout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("expirationDate");
@@ -22,13 +35,31 @@ const Profile = ({ userProfile, setShowProfileModal }) => {
     }
   };
 
-  useEffect(() => {
-    if (isEditingLanguage) {
-      inputRef.current.focus();
-    }
-  }, [isEditingLanguage]);
+  useEffect(() => {}, []);
 
-  //   const handleUserLanguage = () => {};
+  const handleUserLanguage = async (event) => {
+    const selectedLanguageCode = event.target.value;
+    const selectedLanguage = languages.find(
+      (language) => language.value === selectedLanguageCode
+    ).label;
+
+    toast("Updating language...", {
+      duration: 1400,
+      icon: "⏳",
+    });
+
+    const response = await API.updateLanguage(userId, selectedLanguage);
+
+    if (response) {
+      setUserPreviousLanguage(userLanguage);
+      setUserLanguage(selectedLanguage);
+      setTimeout(() => {
+        toast.success("Language updated successfully!");
+      }, 1500);
+    } else {
+      toast.error("Could not update language!");
+    }
+  };
 
   return (
     <div
@@ -36,6 +67,9 @@ const Profile = ({ userProfile, setShowProfileModal }) => {
       className="profile-view z-50 bg-black bg-opacity-50 fixed top-0 left-0 w-full h-screen overflow-auto flex items-center justify-center transition-all duration-300 ease-in-out"
       onClick={closeModal}
     >
+      <div>
+        <Toaster />
+      </div>
       <div
         id="profile-modal"
         className="profile-modal bg-yahoo-white rounded-2xl shadow-2xl p-5 w-1/2 h-1/2 flex flex-col justify-between"
@@ -72,23 +106,21 @@ const Profile = ({ userProfile, setShowProfileModal }) => {
                   {userProfile?.email}
                 </p>
                 <div className="user-language-value flex items-center justify-between mt-5">
-                  <input
-                    ref={inputRef}
-                    id="language-input"
-                    className={`text-start focus:outline-none border-b-2 ${
-                      isEditingLanguage
-                        ? "text-black border-blue-500"
-                        : "text-yahoo-grey pointer-events-none"
-                    }`}
-                    placeholder={`${userProfile?.preferred_language}`}
-                  />
-                  <button
-                    id="edit-button"
-                    className="text-start z-50"
-                    onClick={() => setIsEditingLanguage(!isEditingLanguage)}
+                  <select
+                    ref={selectRef} // Assign ref to the dropdown
+                    id="language-select"
+                    className="text-start focus:outline-none border border-gray-300 rounded px-2 py-1 cursor-pointer"
+                    value={
+                      userProfile?.preferred_language || languages[0].value
+                    } // Set initial value
+                    onChange={handleUserLanguage}
                   >
-                    <img src={editIcon} alt="edit" className="w-10 h-10" />
-                  </button>
+                    {languages.map((language) => (
+                      <option key={language.value} value={language.value}>
+                        {language.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
