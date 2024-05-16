@@ -8,7 +8,10 @@ const {
   addFolder,
   deleteFolder,
   renameFolder,
-  updateLanguage
+  updateLanguage,
+  addEmail,
+  removeEmail,
+  updateEmail
 } = require("../controllers/userController");
 
 const router = express.Router();
@@ -35,5 +38,14 @@ router.get("/getAllUsers", getAllUsers);
 
 // update language
 router.put("/updateLanguage", updateLanguage);
+
+// add email
+router.put("/addEmail", addEmail);
+
+// remove email
+router.put("/removeEmail", removeEmail);
+
+// update emails
+router.put("/updateEmail", updateEmail);
 
 module.exports = router;

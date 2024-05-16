@@ -74,11 +74,20 @@ export const sendEmail = async (
     return null;
   }
   
-  const emailID = response.data.result._id;
-  const emailFolders = response.data.result.folders
+  const email = response.data.result;
+  const emailID = email._id;
+  const emailFolders = email.folders
 
   if (isUrgent && !emailFolders.includes("Urgent")) {
     await addEmailFolder(emailID, "Urgent");
+  }
+
+  if (user._id === recipient._id) {
+    await addEmail(user._id, email);
+  }
+  else {
+    await addEmail(recipient._id, email);
+    await addEmail(user._id, email);
   }
 
   return response.data;
@@ -155,11 +164,30 @@ export const getAllEmails = async () => {
 
 // ========= API PUTS =========
 // this deleteEmail deletes an email from all folders and moves it to the trash folder
-export const deleteEmail = async (token, emailID) => {
+export const deleteEmail = async (token, emailID, userEmails) => {
   const response = await API.put("api/emails/deleteEmail", {
     token,
     emailID,
+    userEmails
   });
+
+  if (!response) {
+    return null;
+  }
+
+  // update user emails
+  const userResponse = await getUser(token);
+
+  if (userResponse) {
+    const user = userResponse.user;
+    const updatedEmail = response.data.result[0];
+    const updateResponse = await updateEmail(user._id, updatedEmail);
+
+    if (!updateResponse) {
+      return null;
+    }
+  }
+
   return response.data;
 };
 
@@ -211,6 +239,35 @@ export const updateLanguage = async (userID, language) => {
   });
   return response.data;
 };
+
+export const addEmail = async (userID, email) => {
+  const response = await API.put("api/users/addEmail", {
+    userID,
+    email,
+  });
+  return response.data;
+}
+
+export const removeEmail = async (userID, email) => {
+  const response = await API.put("api/users/removeEmail", {
+    userID,
+    email,
+  });
+  return response.data;
+}
+
+export const updateEmail = async (userID, newEmail) => {
+  const response = await API.put("api/users/updateEmail", {
+    userID,
+    newEmail,
+  });
+
+  if (!response) {
+    console.log(response)
+    return null;
+  }
+  return response.data;
+}
 
 // ========= API DELETES =========
 export const permanentDeleteEmail = async (token, emailID) => {

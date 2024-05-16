@@ -83,11 +83,14 @@ const sendEmailController = async (req, res) => {
 // delete email to trash
 const deleteEmailController = async (req, res) => {
   try {
-    // set the email's is_deleted to true
-    const result = await Email.updateOne(
-      { _id: req.body.emailID },
-      { $set: { is_deleted: true } }
-    );
+    // go through userEmails and set the email that has the same _id as the emailID to be deleted
+    const resultPromise = req.body.userEmails.map(async (email) => {
+      if (email._id === req.body.emailID) {
+        email.is_deleted = true;
+        return email;
+      } else return email;
+    });
+    const result = await Promise.all(resultPromise);
 
     if (!result)
       return res.status(500).json({ message: "Something went wrong!" });
@@ -144,7 +147,9 @@ const classifyEmailController = async (req, res) => {
 
     const isUrgent = data.labels.some((label) => label.value === "urgent");
 
-    return res.status(200).json({ isUrgent: isUrgent, message: "Email classified successfully" });
+    return res
+      .status(200)
+      .json({ isUrgent: isUrgent, message: "Email classified successfully" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Error classifying email" });

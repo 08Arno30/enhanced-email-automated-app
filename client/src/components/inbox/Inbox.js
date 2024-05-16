@@ -83,7 +83,13 @@ const Inbox = () => {
         key={folder}
         className="folder-button flex flex-col items-center text-yahoo-white md:text-md lg:text-lg mt-2"
       >
-        <div className={`main-container flex items-center justify-between w-full ${activeView === folder ? "bg-yahoo-light-purple bg-opacity-60 rounded-tl-md rounded-bl-sm" : ""}`}>
+        <div
+          className={`main-container flex items-center justify-between w-full ${
+            activeView === folder
+              ? "bg-yahoo-light-purple bg-opacity-60 rounded-tl-md rounded-bl-sm"
+              : ""
+          }`}
+        >
           <div
             className="folder-main-container flex items-center justify-between w-full cursor-pointer"
             onClick={() => handleActiveView(folder)}
@@ -409,12 +415,20 @@ const Inbox = () => {
               </>
             )}
             {!folderList.includes(activeView) && (
-              <p
-                className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
-                onClick={() => handleOpenEmail(email)}
-              >
-                to: {email.recipient_id}
-              </p>
+              <>
+                <input
+                  type="checkbox"
+                  id={`email-${index}`}
+                  checked={trashedCheckedState[index]}
+                  onChange={() => handleSelectEmail(index)}
+                />
+                <p
+                  className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+                  onClick={() => handleOpenEmail(email)}
+                >
+                  to: {email.recipient_id}
+                </p>
+              </>
             )}
           </>
         );
@@ -438,12 +452,20 @@ const Inbox = () => {
               </>
             )}
             {!folderList.includes(activeView) && (
-              <p
-                className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
-                onClick={() => handleOpenEmail(email)}
-              >
-                from: {email.sender_id}
-              </p>
+              <>
+                <input
+                  type="checkbox"
+                  id={`email-${index}`}
+                  checked={trashedCheckedState[index]}
+                  onChange={() => handleSelectEmail(index)}
+                />
+                <p
+                  className="sender whitespace-nowrap w-full text-ellipsis overflow-hidden ml-3"
+                  onClick={() => handleOpenEmail(email)}
+                >
+                  from: {email.sender_id}
+                </p>
+              </>
             )}
           </>
         );
@@ -658,6 +680,18 @@ const Inbox = () => {
       };
 
       testToken();
+
+      const testUser = async () => {
+        const response = await API.getUser(Cookies.get("jwt"));
+
+        if (!response || !response.user) {
+          Cookies.remove("jwt");
+          window.location.reload();
+        }
+      };
+
+      testUser();
+
       const getUserData = async () => {
         const response = await API.getUser(Cookies.get("jwt"));
 
@@ -669,13 +703,23 @@ const Inbox = () => {
           setFolderList(response.user.folders);
 
           // set emails
-          const emailsResponse = await API.getEmails(response.user._id);
+          const emailsResponseAll = await API.getEmails(response.user._id);
+          const emailsResponse = emailsResponseAll.result.filter((email) => {
+            // Find a matching email in response.user.emails
+            const matchingUserEmail = response.user.emails.find(
+              (userEmails) =>
+                userEmails._id === email._id && !userEmails.is_deleted
+            );
 
-          if (emailsResponse && emailsResponse.result) {
+            // Return true if a matching email is found and is not deleted
+            return matchingUserEmail !== undefined;
+          });
+
+          if (emailsResponse) {
             const uniqueEmails = new Set();
             const finalEmailsList = [];
 
-            const senderPromises = emailsResponse.result.map(async (email) => {
+            const senderPromises = emailsResponse.map(async (email) => {
               const senderResponse = await API.getUser(
                 Cookies.get("jwt"),
                 null,
@@ -729,14 +773,28 @@ const Inbox = () => {
             );
 
             setListOfEmails(translatedListOfEmails);
+            setInboxCheckedState(
+              new Array(translatedListOfEmails.length).fill(false)
+            );
 
             const allEmailsResponse = await API.getAllEmails();
 
             if (allEmailsResponse && allEmailsResponse.result) {
-              const sentEmails = allEmailsResponse.result.filter(
+              const sentEmailsResponse = allEmailsResponse.result.filter(
                 (email) =>
                   email.sender_id === userId && email.is_deleted === false
               );
+
+              const sentEmails = sentEmailsResponse.filter((email) => {
+                // Find a matching email in response.user.emails
+                const matchingUserEmail = response.user.emails.find(
+                  (userEmails) =>
+                    userEmails._id === email._id && !userEmails.is_deleted
+                );
+
+                // Return true if a matching email is found and is not deleted
+                return matchingUserEmail !== undefined;
+              });
 
               // Promise array to hold recipient email fetches
               const recipientEmailPromises = sentEmails.map(async (email) => {
@@ -797,11 +855,20 @@ const Inbox = () => {
             }
 
             if (allEmailsResponse && allEmailsResponse.result) {
-              const deletedEmails = allEmailsResponse.result.filter(
+              const deletedEmailsResponse = allEmailsResponse.result.filter(
                 (email) =>
-                  (email.recipient_id === userId && email.is_deleted) ||
-                  (email.sender_id === userId && email.is_deleted)
+                  email.recipient_id === userId || email.sender_id === userId
               );
+              const deletedEmails = deletedEmailsResponse.filter((email) => {
+                // Find a matching email in response.user.emails
+                const matchingUserEmail = response.user.emails.find(
+                  (userEmails) =>
+                    userEmails._id === email._id && userEmails.is_deleted
+                );
+
+                // Return true if a matching email is found and is not deleted
+                return matchingUserEmail !== undefined;
+              });
 
               // Promise array to hold recipient email fetches
               const recipientEmailPromises = deletedEmails.map(
@@ -882,12 +949,17 @@ const Inbox = () => {
               allEmailsResponse.result &&
               response.user.folders.includes(activeView)
             ) {
-              const emailsForFolder = allEmailsResponse.result.filter(
+              const emailsForFolderResponse = allEmailsResponse.result.filter(
                 (email) =>
                   (email.recipient_id === userId &&
                     email.folders.includes(activeView)) ||
                   (email.sender_id === userId &&
                     email.folders.includes(activeView))
+              );
+              const emailsForFolder = emailsForFolderResponse.filter((email) =>
+                response.user.emails.map(
+                  (userEmails) => userEmails._id === email._id
+                )
               );
 
               // Promise array to hold recipient email fetches
@@ -1047,7 +1119,8 @@ const Inbox = () => {
         if (isChecked) {
           const response = await API.deleteEmail(
             Cookies.get("jwt"),
-            listOfEmails[index]._id
+            listOfEmails[index]._id,
+            userProfile.emails
           );
           if (response) {
             console.log("Email deleted");
@@ -1080,6 +1153,10 @@ const Inbox = () => {
           );
         }
       });
+
+      toast("Email(s) moved to trash", {
+        icon: "🗑️",
+      });
     } else if (activeView === "Sent") {
       const checkedState = sentCheckedState;
 
@@ -1087,7 +1164,8 @@ const Inbox = () => {
         if (isChecked) {
           const response = await API.deleteEmail(
             Cookies.get("jwt"),
-            sentEmails[index]._id
+            sentEmails[index]._id,
+            userProfile.emails
           );
           if (response) {
             console.log("Email moved to bin");
@@ -1120,38 +1198,37 @@ const Inbox = () => {
           );
         }
       });
+      toast("Email(s) moved to trash", {
+        icon: "🗑️",
+      });
+    } else if (activeView === "Trash") {
+      const checkedState = trashedCheckedState;
+
+      checkedState.forEach(async (isChecked, index) => {
+        if (isChecked) {
+          const response = await API.removeEmail(userId, trashedEmails[index]);
+
+          if (response) {
+            console.log("Email deleted permanently");
+          } else {
+            console.log("Email not deleted");
+          }
+
+          // remove email from list
+          setTrashedEmails(
+            trashedEmails.filter((email) => email !== trashedEmails[index])
+          );
+
+          // remove email from checkedState
+          setTrashedCheckedState(
+            checkedState.filter((item, idx) => idx !== index)
+          );
+        }
+      });
+      toast("Email(s) deleted", {
+        icon: "🗑️",
+      });
     }
-    // else if (activeView === "Trash") {
-    //   const checkedState = trashedCheckedState;
-
-    //   checkedState.forEach(async (isChecked, index) => {
-    //     if (isChecked) {
-    //       const response = await API.permanentDeleteEmail(
-    //         Cookies.get("jwt"),
-    //         trashedEmails[index]._id
-    //       );
-
-    //       if (response) {
-    //         console.log("Email deleted permanently");
-    //       } else {
-    //         console.log("Email not deleted");
-    //       }
-
-    //       // remove email from list
-    //       setTrashedEmails(
-    //         trashedEmails.filter((email) => email !== trashedEmails[index])
-    //       );
-
-    //       // remove email from checkedState
-    //       setTrashedCheckedState(
-    //         checkedState.filter((item, idx) => idx !== index)
-    //       );
-    //     }
-    //   });
-    // }
-    toast("Email(s) moved to trash", {
-      icon: "🗑️",
-    });
     handleActiveView(activeView);
   };
 
@@ -1263,7 +1340,7 @@ const Inbox = () => {
     setComponentLoader(true);
     setEmailSelected(false);
     setActiveView(view);
-    
+
     if (view === activeView) {
       setActiveFolder("");
     } else {
@@ -1391,52 +1468,50 @@ const Inbox = () => {
                 {activeView}
               </p>
               <hr className="bg-yahoo-grey opacity-50 w-7 rotate-90 mt-1 h-0.5"></hr>
-              {activeView !== "Trash" && (
-                <span className="flex items-center justify-between ml-3">
-                  <p
-                    className={`mr-3 mt-2 ${
-                      emailSelected
-                        ? "cursor-pointer opacity-100"
-                        : "pointer-events-none opacity-30"
-                    }`}
-                  >
-                    Move
-                  </p>
-                  <img
-                    src={folderMove}
-                    alt="folder-move"
-                    className={`w-8 h-8 mt-1 ${
-                      emailSelected
-                        ? "cursor-pointer opacity-100"
-                        : "pointer-events-none opacity-30"
-                    }`}
-                  />
-                </span>
-              )}
-              {activeView !== "Trash" && (
-                <span className="flex items-center justify-between ml-6">
-                  <p
-                    className={`mr-2 mt-2 ${
-                      emailSelected
-                        ? "cursor-pointer opacity-100"
-                        : "pointer-events-none opacity-30"
-                    }`}
-                    onClick={() => handleDeleteSelectedEmails()}
-                  >
-                    Delete
-                  </p>
-                  <img
-                    src={folderTrash}
-                    alt="folder-trash"
-                    className={`w-8 h-8 mt-1 ${
-                      emailSelected
-                        ? "cursor-pointer opacity-100"
-                        : "pointer-events-none opacity-30"
-                    }`}
-                    onClick={() => handleDeleteSelectedEmails()}
-                  />
-                </span>
-              )}
+
+              <span className="flex items-center justify-between ml-3">
+                <p
+                  className={`mr-3 mt-2 ${
+                    emailSelected
+                      ? "cursor-pointer opacity-100"
+                      : "pointer-events-none opacity-30"
+                  }`}
+                >
+                  Move
+                </p>
+                <img
+                  src={folderMove}
+                  alt="folder-move"
+                  className={`w-8 h-8 mt-1 ${
+                    emailSelected
+                      ? "cursor-pointer opacity-100"
+                      : "pointer-events-none opacity-30"
+                  }`}
+                />
+              </span>
+
+              <span className="flex items-center justify-between ml-6">
+                <p
+                  className={`mr-2 mt-2 ${
+                    emailSelected
+                      ? "cursor-pointer opacity-100"
+                      : "pointer-events-none opacity-30"
+                  }`}
+                  onClick={() => handleDeleteSelectedEmails()}
+                >
+                  Delete
+                </p>
+                <img
+                  src={folderTrash}
+                  alt="folder-trash"
+                  className={`w-8 h-8 mt-1 ${
+                    emailSelected
+                      ? "cursor-pointer opacity-100"
+                      : "pointer-events-none opacity-30"
+                  }`}
+                  onClick={() => handleDeleteSelectedEmails()}
+                />
+              </span>
             </div>
           )}
           <hr className="bg-black w-full mt-2 mb-2"></hr>

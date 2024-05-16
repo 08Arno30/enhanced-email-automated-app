@@ -183,12 +183,10 @@ const renameFolder = async (req, res) => {
 
     // Validate input data (optional but recommended)
     if (!userID || !oldFolderName || !newFolderName) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Missing required fields: userID, oldFolderName, newFolderName",
-        });
+      return res.status(400).json({
+        message:
+          "Missing required fields: userID, oldFolderName, newFolderName",
+      });
     }
 
     const user = await User.findById(userID);
@@ -210,7 +208,9 @@ const renameFolder = async (req, res) => {
 
     await user.save();
 
-    return res.status(200).json({ status: "success", message: "Folder renamed successfully" });
+    return res
+      .status(200)
+      .json({ status: "success", message: "Folder renamed successfully" });
   } catch (error) {
     console.error("Error renaming folder:", error);
     return res.status(500).json({ message: "Something went wrong!" });
@@ -235,8 +235,74 @@ const updateLanguage = async (req, res) => {
       .status(500)
       .json({ error: error, message: "Something went wrong!" });
   }
-}
+};
 
+const addEmail = async (req, res) => {
+  try {
+    const result = await User.updateOne(
+      { _id: req.body.userID },
+      { $push: { emails: req.body.email } }
+    );
+
+    if (!result) {
+      return res.status(500).json({ message: "Something went wrong!" });
+    }
+
+    return res.status(200).json({ result: result, success: true });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: error, message: "Something went wrong!" });
+  }
+};
+
+const removeEmail = async (req, res) => {
+  try {
+    const email = req.body.email;
+    const result = await User.updateOne(
+      { _id: req.body.userID },
+      { $pull: { emails: { _id: email._id } } }
+    );
+
+    if (!result) {
+      return res.status(500).json({ message: "Something went wrong!" });
+    }
+
+    return res.status(200).json({ result: result, success: true });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: error, message: "Something went wrong!" });
+  }
+};
+
+const updateEmail = async (req, res) => {
+  try {
+    const userID = req.body.userID;
+    const email = req.body.newEmail;
+    const user = await User.findById(userID);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const emailIndex = user.emails.findIndex((e) => e._id === email._id);
+
+    if (emailIndex === -1) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+
+    user.emails[emailIndex] = email;
+
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ status: "success", message: "Emails updated successfully" });
+  } catch (error) {
+    console.error("Error updating emails:", error);
+    return res.status(500).json({ message: "Something went wrong!" });
+  }
+};
 
 module.exports = {
   signinController,
@@ -246,5 +312,8 @@ module.exports = {
   addFolder,
   deleteFolder,
   renameFolder,
-  updateLanguage
+  updateLanguage,
+  addEmail,
+  removeEmail,
+  updateEmail,
 };
