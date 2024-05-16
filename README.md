@@ -12,8 +12,8 @@ This assignment involved enhancing a legacy system by adding automated functiona
 
 The implemented functionalities are:
 
-  * **Automatic Translation:** This feature addresses the challenge of receiving emails in foreign languages. Incoming emails are processed, translating the subject and body content into English for storage within the PostgreSQL database. Upon retrieval, emails are translated back to the user's preferred language (set during signup and modifiable in settings). English was chosen for internal storage due to its widespread use for machine translation tasks.
-  * **Priority Email Organiser:** To combat information overload, this feature prioritises urgent emails. Sentiment analysis is performed on the subject and body of incoming emails to identify keywords indicative of urgency. Emails classified as urgent are automatically saved to a dedicated "Urgent" folder, allowing users to focus on the most pressing messages first.
+  * **Automatic Translation:** This feature addresses the challenge of receiving emails in foreign languages. Incoming emails are processed, translating the subject and body content into English for storage within the MongoDB database. Upon retrieval, emails are translated back to the user's preferred language (set during signup and modifiable in settings). English was chosen for internal storage due to its widespread use for machine translation tasks.
+  * **Priority Email Organiser:** To combat information overload, this feature prioritises urgent emails. Text Classification via [Levity.ai](https://levity.ai/) is performed on the subject and body of incoming emails to identify keywords indicative of urgency. Emails classified as urgent are automatically saved to a dedicated "Urgent" folder, allowing users to focus on the most pressing messages first.
 
 By incorporating these automated features, this enhanced email system offers improved user experience and potentially serves as a valuable reference for implementing similar functionalities in modern email systems.
 
