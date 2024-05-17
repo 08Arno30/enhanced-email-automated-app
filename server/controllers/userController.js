@@ -77,6 +77,7 @@ const signinController = async (req, res) => {
       .catch((err) => {
         res.status(400).json({ message: "Invalid access token!" });
         console.log(err);
+        Cookies.remove("jwt");
       });
   }
 };
