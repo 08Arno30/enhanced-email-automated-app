@@ -19,4 +19,4 @@ By incorporating these automated features, this enhanced email system offers imp
 
 [GitHub Wiki](https://github.com/08Arno30/enhanced-email-automated-app/wiki)
 
-[View Project Management Board](https://petalite-cress-3d0.notion.site/COS730-Assignment-2-bf827da4dfc3491788a7ca1ab811c256?pvs=4)
+[View Project Management Board](https://petalite-cress-3d0.notion.site/COS730-Assignment-2-ae691a5045314582b8889a7bf453e850?pvs=4)
