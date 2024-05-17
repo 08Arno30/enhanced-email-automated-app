@@ -39,6 +39,10 @@ const LandingPage = () => {
 
       checkToken();
     }
+    else {
+      Cookies.remove("jwt");
+      Cookies.remove("user_id");
+    }
 
     showLoader(1000);
   }, []);
