@@ -1,24 +1,19 @@
+const axios = require("axios");
+
 const translateController = async (req, res) => {
   try {
     const sourceLanguageCode = req.body.sourceLanguageCode; // Assuming source language is in request body
     const targetLanguageCode = req.body.targetLanguageCode; // Assuming target language is in request body
-    const text = encodeURIComponent(req.body.text);
 
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLanguageCode}&tl=${targetLanguageCode}&dt=t&q=${text}`;
+    const url = "https://arnoj-translation-api.onrender.com/translate?text=" + encodeURIComponent(req.body.text) + "&sourceLanguageCode=" + sourceLanguageCode + "&targetLanguageCode=" + targetLanguageCode;
 
-    const response = await fetch(url);
+    const response = await axios.get(url);
 
-    if (!response.ok) {
+    if (!response) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-
-    if (!data || !data[0][0][0]) {
-      throw new Error("No translation data found"); // Check for translations key
-    }
-
-    const translatedText = data[0][0][0]; // Access translated text using documented structure
+    const translatedText = response.data.translatedText; // Access translated text using documented structure
 
     return res.status(200).json({ translatedText });
   } catch (error) {
