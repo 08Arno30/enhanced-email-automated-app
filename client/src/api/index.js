@@ -107,14 +107,10 @@ export const translate = async (
 };
 
 export const classifyEmail = async (emailSubject, emailBody) => {
-  // const response = await API.post("api/emails/classifyEmail", {
-  //   emailSubject,
-  //   emailBody
-  // });
-  const textToClassify = emailSubject + " " + emailBody;
-  const url = "https://arnoj-classification-api.onrender.com/classify";
-
-  const response = axios.post(url, { text_to_classify: textToClassify });
+  const response = await API.post("api/emails/classifyEmail", {
+    emailSubject,
+    emailBody
+  });
   return response.data;
 }
 
