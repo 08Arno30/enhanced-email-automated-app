@@ -51,10 +51,10 @@ export const sendEmail = async (
   const recipient = recipientResponse.user;
   const classificationResponse = await classifyEmail(subject, body);
   const isUrgent = classificationResponse.isUrgent;
-  const userHasUrgentFolder = user.folders?.includes("Urgent");
+  const userHasUrgentFolder = recipient.folders?.includes("Urgent");
   
   if (isUrgent && !userHasUrgentFolder) {
-    await addFolder(user._id, "Urgent");
+    await addFolder(recipient._id, "Urgent");
   }
 
   const response = await API.post("api/emails/sendEmail", {
