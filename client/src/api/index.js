@@ -1,12 +1,12 @@
 import axios from "axios";
 
 // For local development
-// const API = axios.create({ baseURL: "http://localhost:5000" });
+const API = axios.create({ baseURL: "http://localhost:5000" });
 
 // For production
-const API = axios.create({
-  baseURL: "https://enhanced-email-automated-app-backend.onrender.com",
-});
+// const API = axios.create({
+//   baseURL: "https://enhanced-email-automated-app-backend.onrender.com",
+// });
 
 API.interceptors.request.use((req) => {
   if (localStorage.getItem("user_info")) {
@@ -107,11 +107,14 @@ export const translate = async (
 };
 
 export const classifyEmail = async (emailSubject, emailBody) => {
-  const response = await API.post("api/emails/classifyEmail", {
-    emailSubject,
-    emailBody
-  });
+  // const response = await API.post("api/emails/classifyEmail", {
+  //   emailSubject,
+  //   emailBody
+  // });
+  const textToClassify = emailSubject + " " + emailBody;
+  const url = "https://arnoj-classification-api.onrender.com/classify";
 
+  const response = axios.post(url, { text_to_classify: textToClassify });
   return response.data;
 }
 
