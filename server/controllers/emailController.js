@@ -45,7 +45,6 @@ const sendEmailController = async (req, res) => {
   const user = req.body.sender;
   const email = req.body.email;
   const recipient = req.body.recipient;
-  console.log(req.body);
   try {
     const result = await Email.create({
       sender_id: user._id,
