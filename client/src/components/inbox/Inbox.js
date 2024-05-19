@@ -752,13 +752,13 @@ const Inbox = () => {
                 const translatedSubject = await API.translate(
                   email.subject,
                   userPreviousLanguage || "en",
-                  userLanguage
+                  response.user.preferred_language
                 );
 
                 const translatedBody = await API.translate(
                   email.body,
                   userPreviousLanguage || "en",
-                  userLanguage
+                  response.user.preferred_language
                 );
 
                 return {
