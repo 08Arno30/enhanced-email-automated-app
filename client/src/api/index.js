@@ -1,12 +1,12 @@
 import axios from "axios";
 
 // For local development
-// const API = axios.create({ baseURL: "http://localhost:5000" });
+const API = axios.create({ baseURL: "http://localhost:5000" });
 
 // For production
-const API = axios.create({
-  baseURL: "https://enhanced-email-automated-app-backend.onrender.com",
-});
+// const API = axios.create({
+//   baseURL: "https://enhanced-email-automated-app-backend.onrender.com",
+// });
 
 API.interceptors.request.use((req) => {
   if (localStorage.getItem("user_info")) {
@@ -187,7 +187,6 @@ export const deleteEmail = async (token, emailID, userEmails) => {
     });
 
     const updateResponse = await updateEmail(user._id, updatedEmail[0]);
-    console.log(updateResponse)
     if (!updateResponse) {
       return null;
     }
@@ -268,7 +267,6 @@ export const updateEmail = async (userID, newEmail) => {
   });
 
   if (!response) {
-    console.log(response)
     return null;
   }
   return response.data;

@@ -28,7 +28,6 @@ const LandingPage = () => {
       // check if token is still valid
       const checkToken = async () => {
         const response = await API.checkToken(Cookies.get("jwt"));
-        console.log(response.valid);
         if (response.valid) {
           setIsLoggedIn(true);
           showLoader(2000, true);
